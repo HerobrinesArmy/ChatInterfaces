@@ -1,0 +1,13 @@
+The following is a document detailing the reccomended features of starndard chat libs.
+
+
+Highly reccomended:
+GetMessages
+SendMessage
+Login
+Logout
+
+Reccomended:
+Mute
+StopMessageQue
+ClearMessageQue
