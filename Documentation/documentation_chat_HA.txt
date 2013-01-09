@@ -1,23 +1,24 @@
-------- macman31 ------
+------- macman31 - Curl (Linux, bash) howto to interact with HA chatboxes ------
+
 --- AUTHENTICATING ---
 I recommend the following command to auth with the server, as you can immediately grep through it to see if the login was successful :
 
-curl -b /tmp/cookie -c /tmp/cookie -d 'user=USER&pass=PASS' -L http://herobrinesarmy.com/auth.php
+$ curl -b /tmp/cookie -c /tmp/cookie -d 'user=USER&pass=PASS' -L http://herobrinesarmy.com/auth.php
 
 You can check if the login is successful directly, for example :
 
-curl -b /tmp/cookie -c /tmp/cookie -d 'user=USER&pass=PASS' -L http://herobrinesarmy.com/auth.php 2>/dev/null | grep -oE "Authenticated"
+$ curl -b /tmp/cookie -c /tmp/cookie -d 'user=USER&pass=PASS' -L http://herobrinesarmy.com/auth.php 2>/dev/null | grep -oE "Authenticated"
 (empty result = not authenticated, "Authenticated" = authenticated)
 
 The use of the "-L" option mean "follow redirections". It's quite usefull, as many of herobrinesarmy.com action leads to a redirection.
 
 You can check at any time if you are authenticated by running the following command :
-curl -b /tmp/cookie -c /tmp/cookie http://herobrinesarmy.com/amiauth
+$ curl -b /tmp/cookie -c /tmp/cookie http://herobrinesarmy.com/amiauth
 It should return "Nope." if you are not authenticated, and "Yeah." if you are.
 
 --- POSTING MESSAGES ---
 Once authed, you can post a message through the following command :
-curl -L -b /tmp/cookie -c /tmp/cookie "http://herobrinesarmy.com/post_chat.php?jsoncallback=?&c=8613406&o=1&m=MESSAGE"
+$ curl -L -b /tmp/cookie -c /tmp/cookie "http://herobrinesarmy.com/post_chat.php?jsoncallback=?&c=8613406&o=1&m=MESSAGE"
 
 To post in the meeting room/science chat, use "3" instead of "8613406" for the c parameter.
 
@@ -28,7 +29,7 @@ be sure that MESSAGE is URL encoded !
 
 --- GETTING MESSAGES ---
 You can get the message list of a chatroom with this command :
-curl -L -b /tmp/cookie -c /tmp/cookie "http://herobrinesarmy.com/update_chat2.php?jsoncallback=CALLBACK?&c=8613404&l=LASTMESSAGEID"
+$ curl -L -b /tmp/cookie -c /tmp/cookie "http://herobrinesarmy.com/update_chat2.php?jsoncallback=CALLBACK?&c=8613404&l=LASTMESSAGEID"
 
 Note : It's a long poll ! You throw the command, then it will wait until a new message is posted and return the message history, or it will fail after a while, and return nothing (well, except the online user list, that may be useful)
 Note : You may want to fill the last message ID option, to receive only the messages you missed.
@@ -45,5 +46,3 @@ Note: Obviously the data received is JSON.
 
 Structure of an initial message (l=0) : http://i.imgur.com/qE5d7.png
 Structure of an update message (long polling) : http://i.imgur.com/Oq5yp.png
-
----------------------------
