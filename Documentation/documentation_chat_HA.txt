@@ -20,12 +20,13 @@ It should return "Nope." if you are not authenticated, and "Yeah." if you are.
 Once authed, you can post a message through the following command :
 $ curl -L -b /tmp/cookie -c /tmp/cookie "http://herobrinesarmy.com/post_chat.php?jsoncallback=?&c=8613406&o=1&m=MESSAGE"
 
-To post in the meeting room/science chat, use "3" instead of "8613406" for the c parameter.
-
 It should return "?({"success":"true",})"
 
 Please don't modify the values other than "MESSAGE" !
 be sure that MESSAGE is URL encoded !
+
+To post in the meeting room/science chat, use "3" instead of "8613406" for the c parameter.
+You can post and query any c value you want. Everything will be stocked in HA databases. However, only the "8613406" (public chatroom) and the "3" (Science/meeting chatroom) are directly accessible through HA website for now.
 
 --- GETTING MESSAGES ---
 You can get the message list of a chatroom with this command :
