@@ -1,4 +1,4 @@
-I did commita file, it was using Java's URL libraries. After much 
+I did commit a file, it was using Java's URL libraries. After much 
 googling the consensus (lol) on stackoverflow was that these libraries 
 are pretty rubbish. They we recommending an Apache library as a good 
 alternative but I have little desire to use these.
