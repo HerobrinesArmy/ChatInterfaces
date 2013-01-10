@@ -1,9 +1,0 @@
-I did commit a file, it was using Java's URL libraries. After much 
-googling the consensus (lol) on stackoverflow was that these libraries 
-are pretty rubbish. They we recommending an Apache library as a good 
-alternative but I have little desire to use these.
-
-I have decided to start from the ground up making my own HTTP client 
-libraries with the help of the Java socket libraries.
-
-~Phoenix
