@@ -7,3 +7,4 @@ TODO:
 -Decide how chat will poll for new messages. (Possibly thread pool with 
 service executor)
 -Messages need to handle, BBCode, "/me" and emotes
+-HANDLE ALL THE EXCEPTIONS!
