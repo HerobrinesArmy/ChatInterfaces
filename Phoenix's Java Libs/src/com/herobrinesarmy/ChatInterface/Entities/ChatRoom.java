@@ -104,7 +104,7 @@ public class ChatRoom {
 	 * UTF-8 format to ensure that it is URL compliant. It is for this reason that unicode 
 	 * characters in users usernames will appear as a '?'.
 	 * <p>
-	 * I am in the process of deciding if/how to handle these characters.
+	 * I am in the process of deciding how to handle these characters.
 	 *  
 	 * @param message the message that is being sent
 	 * @throws UnsupportedEncodingException if the Encoding format of choice is invalid

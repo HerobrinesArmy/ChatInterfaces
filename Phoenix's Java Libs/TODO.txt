@@ -1,10 +1,5 @@
 TODO:
--Remove Messages primitive array from Client.java
--Have a getMessages() method in Client.java to handle NEW messages only
--ChatRoom.java to handle receiving messages from chat.
 -Tidy up
--Add comments to class files and make sure java docs are readbale
--Decide how chat will poll for new messages. (Possibly thread pool with 
-service executor)
+-Add comments to class files and make sure java docs are readable
 -Messages need to handle, BBCode, "/me" and emotes
 -HANDLE ALL THE EXCEPTIONS!
