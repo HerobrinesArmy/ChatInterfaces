@@ -1,7 +1,5 @@
 package com.herobrinesarmy.ChatInterface;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.CookieManager;
@@ -28,11 +26,6 @@ public class Client {
 	
 	//List of chats
 	private LinkedHashMap<Integer, ChatRoom> chats = new LinkedHashMap<Integer, ChatRoom>();
-	//TODO add method for connecting to chat rooms
-	Message[] messages = null;
-
-	//private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-
 	
 	public static void main(String args[]) throws Exception {
 		//TODO remove after testing
@@ -44,16 +37,7 @@ public class Client {
 		if(authenticate(username, password)) {
 			//main chat 8613406
 			ChatRoom chat = new ChatRoom(8613406);
-			chat.parseUsers();
-			chat.parseMessages();
-			Message[] mess = chat.getMessages();
-			for(Message m : mess) {
-				System.out.println(m.formattedMessage());
-			}
-//			connectChat(8613406);
-//			messages = chats.get(8613406).getMessages();
-//			printNewMessages();
-			//System.out.println(mess.length);
+			chat.getNewMessages();
 		}
 	}
 	
@@ -94,31 +78,4 @@ public class Client {
 		ChatRoom chat = new ChatRoom(chatChannel);
 		chats.put(chat.getChannel(), chat);
 	}
-	
-//	final void getNewMessages(final int chatroom) {
-//		final ChatRoom temp = chats.get(chatroom);
-//		final Runnable connectChat = new Runnable() { 
-//			public void run() {
-//				try {
-//					temp.parseUsers();
-//					temp.parseMessages();
-//					messages = temp.getMessages();
-//					printNewMessages();
-//				} catch (IOException e) {
-//					e.printStackTrace();
-//				} catch (JSONException e) {
-//					e.printStackTrace();
-//				}
-//			}
-//		};
-//		@SuppressWarnings("unused")
-//		final ScheduledFuture<?> connectHandler = scheduler.scheduleWithFixedDelay(connectChat, 1, 30, SECONDS);
-//	}
-//
-	public void printNewMessages() {
-		for(Message m : messages) {
-			System.out.println(m.formattedMessage());
-		}
-	}
-
 }
