@@ -34,15 +34,6 @@ public class Message {
 		this.timestamp = timestamp;
 	}
 	
-//	ALTERNATIVE WHEN USING USER OBJECTS	
-//	public User getUser() {
-//		return user;
-//	}
-//	
-//	public void setUser(User user) {
-//		this.user = user;
-//	}
-	
 	public String getUser() {
 		return user;
 	}
@@ -59,7 +50,7 @@ public class Message {
 		this.messageText = text;
 	}
 	
-	public String formattedMessage() {
+	public String getMessage() {
 		return "[" + timestamp + "] " + user + ": " + messageText;
 	}
 }
