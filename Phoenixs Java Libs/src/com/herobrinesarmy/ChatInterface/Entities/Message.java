@@ -3,6 +3,8 @@
  */
 package com.herobrinesarmy.ChatInterface.Entities;
 
+import org.apache.commons.lang3.StringEscapeUtils;
+
 /**
  * @author Phoenix
  *
@@ -14,43 +16,43 @@ public class Message {
 	private String user;
 	private String messageText;
 	
-	public Message(int messageID) {
+	protected Message(int messageID) {
 		this.messageID = messageID;
 	}
 	
-	public int getMsgID() {
+	protected int getMsgID() {
 		return messageID;
 	}
 	
-	public void setMsgid(int msgid) {
+	protected void setMsgid(int msgid) {
 		this.messageID = msgid;
 	}
 	
-	public String getTimestamp() {
+	protected String getTimestamp() {
 		return timestamp;
 	}
 	
-	public void setTimestamp(String timestamp) {
+	protected void setTimestamp(String timestamp) {
 		this.timestamp = timestamp;
 	}
 	
-	public String getUser() {
+	protected String getUser() {
 		return user;
 	}
 	
-	public void setUser(String user) {
+	protected void setUser(String user) {
 		this.user = user.substring(user.indexOf("'>")+2,user.indexOf("</"));
 	}
 	
-	public String getText() {
+	protected String getText() {
 		return messageText;
 	}
 	
-	public void setText(String text) {
+	protected void setText(String text) {
 		this.messageText = text;
 	}
 	
-	public String getMessage() {
-		return "[" + timestamp + "] " + user + ": " + messageText;
+	protected String getMessage() {
+		return StringEscapeUtils.unescapeHtml4("[" + timestamp + "] " + user + ": " + messageText);
 	}
 }

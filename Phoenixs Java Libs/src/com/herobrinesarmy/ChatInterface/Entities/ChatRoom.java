@@ -78,8 +78,11 @@ public class ChatRoom {
 	//Holds all of the messages in an online session
 	private LinkedHashMap<Integer, Message> messages = new LinkedHashMap<Integer, Message>();
 	
-	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-
+	//The scheduler service for the getMessages() thread
+	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+	
+	//TODO TESTING PURPOSES
+	Scanner kbd = new Scanner(System.in);
 	
 	//Holds online users only, sized at the main users list
 	//private User[] onlineUserList = new User[users.size()];
@@ -113,7 +116,7 @@ public class ChatRoom {
 	 */
 	public void postMessage(String message) throws MalformedURLException, UnsupportedEncodingException, IOException {
 		URL url = new URL("http://herobrinesarmy.com/post_chat?o=1&c=" + this.channel
-        		+ "&messageList=" + URLEncoder.encode(message, enc));
+        		+ "&m=" + URLEncoder.encode(message, enc));
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
         conn.setDoInput(true);
@@ -187,7 +190,7 @@ public class ChatRoom {
 	 * @throws IOException if getInputStream() or openConnection() throw an exception
 	 * @throws JSONException if there is a syntax error in the source JSONObject or a duplicated key
 	 */
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "unused" })
 	private void parseUsers() throws JSONException, IOException {
 		JSONObject jsonUsers = poll().getJSONObject("users");
 		Iterator keys = jsonUsers.keys();
@@ -205,6 +208,18 @@ public class ChatRoom {
 		
 	}	
 	
+	/**
+	 * Calls <code>parseMessages()</code> to update messages <code>LinkedHashMap</code> and then puts the values
+	 * of messages into a <code>Collection</code>. Loops through the collection and if the message id is greater than 
+	 * <code>lastMessageID</code> then it is put into a newly created <code>LinkedHashMap</code>. The latest messages
+	 * are then put into a primitive <code>Message</code> array, which is then ordered by a bubble sort using message IDs.
+	 * <code>lastMessageID</code> is then set using the last message captured and the <code>Message</code> array is returned.
+	 * 
+	 * @see Message
+	 * @return the most recent messages in order as a primitive Message array
+	 * @throws IOException if parseMessages()
+	 * @throws JSONException if there is a syntax error in the source JSONObject or a duplicated key
+	 */
 	private Message[] getMessages() throws JSONException, IOException {
 		parseMessages();
 		Collection<Message> ml = messages.values();
@@ -231,6 +246,7 @@ public class ChatRoom {
 		return messageList;
 	}
 	
+	//TESTING
 	private void printNewMessages() throws IOException, JSONException {
 		//TODO decide method of output for final libs
 		//ONLY FOR TESTING
@@ -239,6 +255,11 @@ public class ChatRoom {
 		}
 	}
 	
+	/**
+	 * A simple thread management method. It creates the thread to run the printing of messages, then schedules
+	 * this thread to run every second, getting message updates from the chat every second. If no messages are
+	 * present, then a JSON exception is thrown, but not caught. This exception isn't harmful, so it can be ignored.
+	 */
 	public final void getNewMessages() {
 		final Runnable printMessages = new Runnable() { 
 			public void run() {
@@ -252,8 +273,30 @@ public class ChatRoom {
 				}
 			}
 		};
+		final Runnable writeMessages = new Runnable() {
+			public void run() {
+				try {
+					writeToChat();
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		};
 		@SuppressWarnings("unused")
-		final ScheduledFuture<?> connectHandler = scheduler.scheduleWithFixedDelay(printMessages, 0, INTERVAL, SECONDS);
+		final ScheduledFuture<?> poller = scheduler.scheduleWithFixedDelay(printMessages, 0, INTERVAL, SECONDS);
+		@SuppressWarnings("unused")
+		final ScheduledFuture<?> writer = scheduler.schedule(writeMessages, 0, SECONDS);
+	}
+	
+	//TODO TESTING
+	public void writeToChat() throws MalformedURLException, UnsupportedEncodingException, IOException {
+		while(true) {
+			postMessage(kbd.nextLine());
+		}
 	}
 	
 //	public User[] getUsers() {
