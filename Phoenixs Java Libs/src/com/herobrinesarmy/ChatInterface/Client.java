@@ -28,7 +28,7 @@ import com.herobrinesarmy.ChatInterface.Entities.*;
  * The only methods accessed from outside of this class should be <code>postMessage()</code> and <code>getNewMessages()</code>
  * in the ChatRoom class.
  * 
- * @author georgewatts
+ * @author Phoenix
  * @version 1.0
  * @since 1.0
  * @see ChatRoom

@@ -137,7 +137,7 @@ public class ChatRoom {
 	 * @throws JSONException if there is a syntax error in the source string or a duplicated key
 	 */
 	private JSONObject poll() throws MalformedURLException, IOException, JSONException {
-		URL url = new URL("http://herobrinesarmy.com/update_chat2?messageList=1&c=" + this.channel + "&l=" + this.lastMessageID);
+		URL url = new URL("http://herobrinesarmy.com/update_chat2?&c=" + this.channel + "&l=" + this.lastMessageID);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
         conn.setDoInput(true);

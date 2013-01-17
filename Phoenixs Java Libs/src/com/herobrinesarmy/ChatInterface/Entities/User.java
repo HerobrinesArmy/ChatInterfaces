@@ -1,5 +1,6 @@
 /**
- * 
+ * Copyright (c) 2012 Phoenix, Herobrine and herobrinesarmy.com
+ * YOU WILL FUCKING FREELY USE MY CODE HOWEVER YOU GODDAMN WANT TO. (sic) - Kitcat490
  */
 package com.herobrinesarmy.ChatInterface.Entities;
 
