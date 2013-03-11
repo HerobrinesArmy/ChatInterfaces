@@ -44,6 +44,8 @@ public class Client {
 	
 	//List of chats
 	private LinkedHashMap<Integer, ChatRoom> chats = new LinkedHashMap<Integer, ChatRoom>();
+
+	private Scanner kbd = new Scanner(System.in);
 	
 	public static void main(String args[]) throws Exception {
 		//TODO remove after testing
@@ -56,6 +58,9 @@ public class Client {
 			//main chat 8613406
 			connectChat(8613406);
 			chats.get(8613406).getNewMessages();
+			while(true) {
+				chats.get(8613406).postMessage(kbd.nextLine());
+			}
 		}
 	}
 	
