@@ -1,0 +1,13 @@
+package com.herobrinesarmy.ChatInterface;
+
+public class ClientGUI {
+
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}
