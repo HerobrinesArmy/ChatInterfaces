@@ -10,17 +10,13 @@ import java.net.CookieManager;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.LinkedHashMap;
 import java.util.Scanner;
-
-import org.json.JSONException;
 
 import com.herobrinesarmy.ChatInterface.Entities.*;
 
 /**
- * Client is the top level class, and only interacts with ChatRooms. It holds a <code>LinkedHashMap</code> of
- * all the ChatRooms that have been connected to by invoking the <code>connectChat()</code> method. Authentication
- * to the server is also handled here, as well as the cookies passed to and from the server, this is done by the 
+ * Client is the top level class, and only interacts with ChatRooms. Authentication to the server is handled here, 
+ * as well as the cookies passed to and from the server, this is done by the 
  * <code>authenticate()</code> method that takes the users username and password as parameters. A separate method,
  * <code>checkAuth()</code> is used to check authentication by the <code>authenticate()</code> method, and it returns
  * a boolean value depending on the string returned by <code>checkAuth()</code>.
@@ -41,9 +37,6 @@ public class Client {
 	
 	//Cookie Manager
 	private CookieManager cookieManager = new CookieManager();
-	
-	//List of chats
-	private LinkedHashMap<Integer, ChatRoom> chats = new LinkedHashMap<Integer, ChatRoom>();
 
 	private Scanner kbd = new Scanner(System.in);
 	
@@ -56,11 +49,14 @@ public class Client {
 		CookieManager.setDefault(cookieManager);
 		if(authenticate(username, password)) {
 			//main chat 8613406
-			connectChat(8613406);
-			chats.get(8613406).getNewMessages();
+			ChatRoom chat = new ChatRoom(8613406);
+			chat.getNewMessages();
 			while(true) {
-				chats.get(8613406).postMessage(kbd.nextLine());
+				chat.postMessage(kbd.nextLine());
 			}
+		}
+		else {
+			
 		}
 	}
 	
@@ -114,17 +110,5 @@ public class Client {
 	        	result += reader.nextLine();
 	        }
 	        return result;
-	}
-	
-	/**
-	 * Creates a new ChatRoom and then stores it in the <code>LinkedHashMap</code> chats.
-	 * 
-	 * @param chatChannel the channel of the ChatRoom to be created
-	 * @throws JSONException when "things are amiss"
-	 * @throws IOException if there is a general IO error
-	 */
-	public void connectChat(int chatChannel) throws JSONException, IOException {
-		ChatRoom chat = new ChatRoom(chatChannel);
-		chats.put(chat.getChannel(), chat);
 	}
 }
