@@ -95,7 +95,7 @@ public class Message {
 		return text;
 	}
 	
-	protected String getMessage() {
+	public String getMessage() {
 		return StringEscapeUtils.unescapeHtml4("[" + timestamp + "] " + user + ": " + messageText);
 	}
 }
