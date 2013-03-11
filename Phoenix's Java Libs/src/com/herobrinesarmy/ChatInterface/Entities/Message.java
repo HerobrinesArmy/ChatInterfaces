@@ -4,6 +4,8 @@
  */
 package com.herobrinesarmy.ChatInterface.Entities;
 
+import java.util.regex.Pattern;
+
 import org.apache.commons.lang3.StringEscapeUtils;
 
 /**
@@ -50,7 +52,7 @@ public class Message {
 	}
 	
 	protected void setUser(String user) {
-		this.user = user.substring(user.indexOf("'>")+2,user.indexOf("</"));
+		this.user = user.substring(user.lastIndexOf("'>")+2,user.lastIndexOf("</"));
 	}
 	
 	protected String getText() {
@@ -59,6 +61,7 @@ public class Message {
 	
 	protected void setText(String text) {
 		this.messageText = handleBBCode(text);
+//		this.messageText = text;
 	}
 	
 	private String handleBBCode(String text) {
@@ -67,7 +70,7 @@ public class Message {
 			while(contains == true) {
 				if(text.contains("\"bbcode_smiley\"")) {
 					String emote = text.substring(text.indexOf("\"",text.indexOf("alt=\""))+1,text.indexOf("\"",text.indexOf("\"",text.indexOf("alt=\""))+1));
-					String regex = text.substring(text.indexOf("<img"),text.indexOf("/>")+2);
+					String regex = Pattern.quote(text.substring(text.indexOf("<img"),text.indexOf("/>")+2));
 					String emoteText = text.replaceFirst(regex, emote);
 					text = emoteText;
 					if(!emoteText.contains("\"bbcode_smiley\"")) {
@@ -80,7 +83,7 @@ public class Message {
 				}
 				else if(text.contains("\"bbcode_img\"")) {
 					String imgURL = text.substring(text.indexOf("\"",text.indexOf("src="))+1,text.indexOf("\"",text.indexOf("\"",text.indexOf("src="))+1));
-					String regex = text.substring(text.indexOf("<img"),text.indexOf("/>")+2);
+					String regex = Pattern.quote(text.substring(text.indexOf("<img"),text.indexOf("/>")+2));
 					String imgText = text.replaceFirst(regex, imgURL);
 					text = imgText;
 					if(!imgText.contains("\"bbcode_img\"")) {
