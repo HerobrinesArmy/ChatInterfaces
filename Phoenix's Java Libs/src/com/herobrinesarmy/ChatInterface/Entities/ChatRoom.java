@@ -205,7 +205,6 @@ public class ChatRoom {
 				users.put(userID, user);
 			}
 		}
-		
 	}	
 	
 	/**
@@ -252,6 +251,8 @@ public class ChatRoom {
 		//ONLY FOR TESTING
 		for(Message m : getMessages()) {
 			System.out.println(m.getMessage());
+			//DataOutputStream out = new DataOutputStream(System.out.println(getMessages()));
+			//ObjectOutputStream out = new ObjectOutputStream(getMessages());
 		}
 	}
 	
@@ -269,35 +270,20 @@ public class ChatRoom {
 					e.printStackTrace();
 				} catch (JSONException e) {
 					//Maybe add increasing interval operation here.
-					//WILL RETURN IF NO NEW MESSAGES
-				}
-			}
-		};
-		final Runnable writeMessages = new Runnable() {
-			public void run() {
-				try {
-					writeToChat();
-				} catch (MalformedURLException e) {
-					e.printStackTrace();
-				} catch (UnsupportedEncodingException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
+					//WILL BE THROWN IF NO NEW MESSAGES
 				}
 			}
 		};
 		@SuppressWarnings("unused")
 		final ScheduledFuture<?> poller = scheduler.scheduleWithFixedDelay(printMessages, 0, INTERVAL, SECONDS);
-		@SuppressWarnings("unused")
-		final ScheduledFuture<?> writer = scheduler.schedule(writeMessages, 0, SECONDS);
 	}
 	
 	//TODO TESTING
-	public void writeToChat() throws MalformedURLException, UnsupportedEncodingException, IOException {
-		while(true) {
-			postMessage(kbd.nextLine());
-		}
-	}
+//	public void writeToChat() throws MalformedURLException, UnsupportedEncodingException, IOException {
+//		while(true) {
+//			postMessage(kbd.nextLine());
+//		}
+//	}
 	
 //	public User[] getUsers() {
 //		User[] userList = users.values().toArray(new User[0]);
