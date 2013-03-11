@@ -219,7 +219,7 @@ public class ChatRoom {
 	 * @throws IOException if parseMessages()
 	 * @throws JSONException if there is a syntax error in the source JSONObject or a duplicated key
 	 */
-	private Message[] getMessages() throws JSONException, IOException {
+	public Message[] getMessages() throws JSONException, IOException {
 		parseMessages();
 		Collection<Message> ml = messages.values();
 		LinkedHashMap<Integer, Message> newMessages = new LinkedHashMap<Integer, Message>();
