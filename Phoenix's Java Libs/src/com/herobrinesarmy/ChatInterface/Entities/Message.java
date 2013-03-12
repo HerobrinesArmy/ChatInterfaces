@@ -92,16 +92,14 @@ public class Message {
 				}
 			}
 		}
-		else if(text.contains("<br />")) {
-				//String regex = text.substring(text.indexOf("&gt;<br />"));
-				text = text.replaceAll("<br />", "<Illegal Character>");
-				System.out.println(text);
-		}
-		return Pattern.quote(text);
+//		else if(text.contains("<br />")) {
+//				text = text.replaceAll("<br />", "");
+//				System.out.println(text);
+//		}
+		return text;
 	}
 	
 	public String getMessage() {
 		return StringEscapeUtils.unescapeHtml4("[" + timestamp + "] " + user + ": " + messageText);
-		//return ("[" + timestamp + "] " + user + ": " + messageText);
 	}
 }
