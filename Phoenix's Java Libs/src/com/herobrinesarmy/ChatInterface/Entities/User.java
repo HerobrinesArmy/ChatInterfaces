@@ -15,35 +15,35 @@ public class User {
 	private int userTag;
 	private boolean online;
 	
-	protected User(int ID) {
+	public User(int ID) {
 		this.userID = ID;
 	}
 	
-	protected int getUserID() {
+	public int getUserID() {
 		return userID;
 	}
 	
-	protected String getUsername() {
+	public String getUsername() {
 		return username;
 	}
 	
-	protected int getUserTag() {
+	public int getUserTag() {
 		return userTag;
 	}
 	
-	protected boolean isOnline() {
+	public boolean isOnline() {
 		return online;
 	}
 	
-	protected void setUsername(String username) {
+	public void setUsername(String username) {
 		this.username = username;
 	}
 	
-	protected void setUserTag(int userTag) {
+	public void setUserTag(int userTag) {
 		this.userTag = userTag;
 	}
 	
-	protected void setOnline(boolean online) {
+	public void setOnline(boolean online) {
 		this.online = online;
 	}
 	
