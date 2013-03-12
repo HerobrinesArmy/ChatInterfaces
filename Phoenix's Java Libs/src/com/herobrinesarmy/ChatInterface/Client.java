@@ -55,9 +55,6 @@ public class Client {
 				chat.postMessage(kbd.nextLine());
 			}
 		}
-		else {
-			
-		}
 	}
 	
 	/**

@@ -60,11 +60,11 @@ public class Message {
 	}
 	
 	protected void setText(String text) {
-		this.messageText = handleBBCode(text);
+		this.messageText = handleCharacters(text);
 //		this.messageText = text;
 	}
 	
-	private String handleBBCode(String text) {
+	private String handleCharacters(String text) {
 		boolean contains = true;
 		if(text.contains("\"bbcode_smiley\"") || text.contains("\"bbcode_img\"")) {
 			while(contains == true) {
@@ -92,10 +92,16 @@ public class Message {
 				}
 			}
 		}
-		return text;
+		else if(text.contains("<br />")) {
+				//String regex = text.substring(text.indexOf("&gt;<br />"));
+				text = text.replaceAll("<br />", "<Illegal Character>");
+				System.out.println(text);
+		}
+		return Pattern.quote(text);
 	}
 	
 	public String getMessage() {
 		return StringEscapeUtils.unescapeHtml4("[" + timestamp + "] " + user + ": " + messageText);
+		//return ("[" + timestamp + "] " + user + ": " + messageText);
 	}
 }
