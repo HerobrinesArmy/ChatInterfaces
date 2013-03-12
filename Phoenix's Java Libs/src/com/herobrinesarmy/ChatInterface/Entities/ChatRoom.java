@@ -285,11 +285,7 @@ public class ChatRoom {
 			//}
 		}
 //		User[] userList = onlineUsers.values().toArray(new User[0]);
-		Collection<User> userList = onlineUsers.values();
-		System.out.println(ul.size());
-		System.out.println(onlineUsers.size());
-		System.out.println(users.size());
-		return userList;
+		return ul;
 	}
 	
 //	private void updateChannelUsers(User user) {

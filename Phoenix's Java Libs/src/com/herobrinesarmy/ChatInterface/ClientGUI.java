@@ -207,10 +207,9 @@ public class ClientGUI {
 		};
 		final Runnable outputUsers = new Runnable() {
 			public void run() {
-				System.out.println("test");
 				try {
+					userList.setText(null);
 					for(User u : chat.getUsers()) {
-						System.out.println(u.getUsername());
 						userList.append(u.getUsername() + "\n");
 					}					
 				} catch (JSONException e) {
@@ -223,7 +222,7 @@ public class ClientGUI {
 		@SuppressWarnings("unused")
 		final ScheduledFuture<?> messages = scheduler.scheduleWithFixedDelay(outputMessages, 0, 1, SECONDS);
 		@SuppressWarnings("unused")
-		final ScheduledFuture<?> users = scheduler.scheduleWithFixedDelay(outputUsers, 0, 1, SECONDS);
+		final ScheduledFuture<?> users = scheduler.scheduleWithFixedDelay(outputUsers, 0, 30, SECONDS);
 	}
 	
 	/**
