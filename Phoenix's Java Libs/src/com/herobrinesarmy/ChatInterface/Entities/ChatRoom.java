@@ -71,7 +71,7 @@ public class ChatRoom {
 	
 	/*
 	 * Holds all of the users in an online session with their user ID as a key,
-	 * and the user as the  even if they go offline, they will remain here
+	 * and the user as the even if they go offline, they will remain here
 	 */
 	private LinkedHashMap<Integer, User> users = new LinkedHashMap<Integer, User>();
 	
@@ -184,13 +184,12 @@ public class ChatRoom {
 	 * a user object which is then put in the LinkedHashMap.
 	 * <p>
 	 * <b><u>IMPORTANT</u></b><br>
-	 * I haven't yet been able to implement a way of updating a list of online users, however this feature will be coming.
 	 * 
 	 * @see User
 	 * @throws IOException if getInputStream() or openConnection() throw an exception
 	 * @throws JSONException if there is a syntax error in the source JSONObject or a duplicated key
 	 */
-	@SuppressWarnings({ "rawtypes", "unused" })
+	@SuppressWarnings({ "rawtypes" })
 	private void parseUsers() throws JSONException, IOException {
 		JSONObject jsonUsers = poll().getJSONObject("users");
 		Iterator keys = jsonUsers.keys();
@@ -251,8 +250,6 @@ public class ChatRoom {
 		//ONLY FOR TESTING
 		for(Message m : getMessages()) {
 			System.out.println(m.getMessage());
-			//DataOutputStream out = new DataOutputStream(System.out.println(getMessages()));
-			//ObjectOutputStream out = new ObjectOutputStream(getMessages());
 		}
 	}
 	
@@ -278,18 +275,22 @@ public class ChatRoom {
 		final ScheduledFuture<?> poller = scheduler.scheduleWithFixedDelay(printMessages, 0, INTERVAL, SECONDS);
 	}
 	
-	//TODO TESTING
-//	public void writeToChat() throws MalformedURLException, UnsupportedEncodingException, IOException {
-//		while(true) {
-//			postMessage(kbd.nextLine());
-//		}
-//	}
-	
-//	public User[] getUsers() {
-//		User[] userList = users.values().toArray(new User[0]);
-//		
-//		return userList;
-//	}
+	public Collection<User> getUsers() throws JSONException, IOException {
+		parseUsers();
+		Collection<User> ul = users.values();
+		LinkedHashMap<Integer, User> onlineUsers = new LinkedHashMap<Integer, User>();
+		for(User u : ul) {
+			//if(!onlineUsers.containsKey(u.getUserID())) {
+				onlineUsers.put(u.getUserID(), u);
+			//}
+		}
+//		User[] userList = onlineUsers.values().toArray(new User[0]);
+		Collection<User> userList = onlineUsers.values();
+		System.out.println(ul.size());
+		System.out.println(onlineUsers.size());
+		System.out.println(users.size());
+		return userList;
+	}
 	
 //	private void updateChannelUsers(User user) {
 //		//TODO pollUsers to update channel user list, or have "hidden"
