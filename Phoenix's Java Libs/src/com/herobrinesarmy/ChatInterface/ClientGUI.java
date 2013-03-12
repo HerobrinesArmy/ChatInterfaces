@@ -7,13 +7,16 @@ package com.herobrinesarmy.ChatInterface;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.awt.*;
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.AdjustmentListener;
-import java.awt.image.ImageObserver;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.CookieManager;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.LinkedHashMap;
@@ -57,11 +60,13 @@ public class ClientGUI {
 	//The scheduler service for the getMessages() thread
 	private final static ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 	
+	static ChatRoom chat = new ChatRoom(8613406);
+	
 	//GUI Components
-	private JFrame frame = new JFrame("HA Chat Client v0.1");
+	private JFrame frame = new JFrame("HA Chat Client v1.0");
 	private Container contentPane;
 	private JMenuBar menuBar = new JMenuBar();
-	private JMenu chatMenu = new JMenu();
+	private JMenu chatMenu = new JMenu("Options");
 	private JMenuItem auth = new JMenuItem("Authenticate");
 	private JMenuItem quit = new JMenuItem("Quit");
 	private static JTextArea chatArea = new JTextArea(40, 80);
@@ -70,6 +75,7 @@ public class ClientGUI {
 	
 	public ClientGUI() {		
 		contentPane = frame.getContentPane();
+		contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
 		frame.setJMenuBar(menuBar);
 		menuBar.add(chatMenu);
 		chatMenu.add(auth);
@@ -77,12 +83,20 @@ public class ClientGUI {
 		chatMenu.add(quit);
 		//TODO actionhandler
 		chatArea.setEditable(false);
+		chatArea.setLineWrap(true);
 //		scrollArea.getVerticalScrollBar().addAdjustmentListener(new autoScroll());
 		scrollArea.setAutoscrolls(true);
 		scrollArea.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		//messageArea.setSize(80, 20);
 		frame.add(scrollArea);
+		frame.add(messageArea);
+		messageArea.addKeyListener(new messageActionHandler());
 		frame.pack();
 		frame.setVisible(true);
+	}
+	
+	public void login() {
+		
 	}
 	
 	/**
@@ -181,16 +195,44 @@ public class ClientGUI {
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) throws IOException {
-		System.out.println(authenticate("Phoenix", "phoenix108"));
+		authenticate("USERNAME", "PASS");
 		new ClientGUI();
-		ChatRoom chat = new ChatRoom(8613406);
 		getNewMessages(chat);
 	}
 	
-//	private class autoScroll implements AdjustmentListener
-//	{
-//		public void adjustmentValueChanged(AdjustmentEvent e) {
-//			e.getAdjustable().;
-//		}
-//	}
+	private class messageActionHandler implements KeyListener {
+
+		@Override
+		public void keyPressed(KeyEvent e) {
+			if(e.getKeyCode() == KeyEvent.VK_ENTER && messageArea.getText() != null) {
+				try {
+					chat.postMessage(messageArea.getText());
+				} catch (MalformedURLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (UnsupportedEncodingException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				messageArea.setText(null);
+				messageArea.setCaretPosition(0);
+			}
+		}
+
+		@Override
+		public void keyReleased(KeyEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void keyTyped(KeyEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
 }
