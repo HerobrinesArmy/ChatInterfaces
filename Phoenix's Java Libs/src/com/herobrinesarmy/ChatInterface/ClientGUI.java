@@ -7,6 +7,8 @@ package com.herobrinesarmy.ChatInterface;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.DataOutputStream;
@@ -22,13 +24,13 @@ import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-
 import javax.swing.*;
 
 import org.json.JSONException;
 
 import com.herobrinesarmy.ChatInterface.Entities.ChatRoom;
 import com.herobrinesarmy.ChatInterface.Entities.Message;
+import com.herobrinesarmy.ChatInterface.Entities.User;
 
 /**
  * This class manages the GUI and only interacts with ChatRooms. It holds a <code>LinkedHashMap</code> of
@@ -61,19 +63,20 @@ public class ClientGUI {
 	static ChatRoom chat = new ChatRoom(8613406);
 	
 	//GUI Components
-	private JFrame frame = new JFrame("HA Chat Client v1.0");
-	private Container contentPane;
+	private static JFrame frame = new JFrame("HA Chat Client v1.0");
+	//private Container contentPane;
 	private JMenuBar menuBar = new JMenuBar();
 	private JMenu chatMenu = new JMenu("Options");
 	private JMenuItem auth = new JMenuItem("Authenticate");
 	private JMenuItem quit = new JMenuItem("Quit");
 	private static JTextArea chatArea = new JTextArea(40, 80);
 	private JTextArea messageArea = new JTextArea(5, 80);
+	private static JTextArea userList = new JTextArea(50,10);
 	private static JScrollPane scrollArea = new JScrollPane(chatArea);
 	
 	public ClientGUI() {		
-		contentPane = frame.getContentPane();
-		contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
+//		contentPane = frame.getContentPane();
+//		contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
 		frame.setJMenuBar(menuBar);
 		menuBar.add(chatMenu);
 		chatMenu.add(auth);
@@ -84,15 +87,35 @@ public class ClientGUI {
 		chatArea.setLineWrap(true);
 		scrollArea.setAutoscrolls(true);
 		scrollArea.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-		frame.add(scrollArea);
-		frame.add(messageArea);
-		messageArea.addKeyListener(new messageActionHandler());
+		userList.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
+		userList.setEditable(false);
+		messageArea.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
+		scrollArea.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
+		chatArea.setBackground(Color.BLACK);
+		chatArea.setForeground(Color.WHITE);
+		messageArea.setBackground(Color.BLACK);
+		messageArea.setForeground(Color.WHITE);
+		messageArea.setCaretColor(Color.WHITE);
+		userList.setBackground(Color.BLACK);
+		userList.setForeground(Color.WHITE);
+		JPanel textPanels = new JPanel();
+		
+		textPanels.setLayout(new BoxLayout(textPanels, BoxLayout.Y_AXIS));
+		textPanels.add(scrollArea);
+		textPanels.add(messageArea);
+
+		messageArea.addKeyListener(new MessageActionHandler());
+//		frame.add(scrollArea);
+//		frame.add(messageArea);
+		frame.add(textPanels, BorderLayout.CENTER);
+		frame.add(userList, BorderLayout.EAST);
 		frame.pack();
 		frame.setVisible(true);
-	}
-	
-	public void login() {
-		
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		LoginDialog loginDialog = new LoginDialog(frame);
+		loginDialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+		loginDialog.setSize(new Dimension(420,150));
+		loginDialog.setVisible(true);
 	}
 	
 	/**
@@ -134,18 +157,18 @@ public class ClientGUI {
 	 * @throws IOException if there is a general IO exception thrown
 	 */
 	private static String checkAuth() throws IOException {
-	    String result = "";
+		String result = "";
 	    Scanner reader = null;
-	        URL url = new URL("http://herobrinesarmy.com/amiauth");
-	        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-	        conn.setRequestMethod("GET");
-	        conn.setDoInput(true);
-	        
-	        reader = new Scanner(conn.getInputStream());
-	        while(reader.hasNext()) {
-	        	result += reader.nextLine();
-	        }
-	        return result;
+	    URL url = new URL("http://herobrinesarmy.com/amiauth");
+	    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+	    conn.setRequestMethod("GET");
+	    conn.setDoInput(true);
+
+	    reader = new Scanner(conn.getInputStream());
+	    while(reader.hasNext()) {
+	    	result += reader.nextLine();
+	    }
+	    return result;
 	}
 	
 	/**
@@ -165,26 +188,42 @@ public class ClientGUI {
 	 * this thread to run every second, getting message updates from the chat every second. If no messages are
 	 * present, then a JSON exception is thrown, but not caught. This exception isn't harmful, so it can be ignored.
 	 */
-	public final static void getNewMessages(final ChatRoom chat) {
-		final Runnable printMessages = new Runnable() { 
+	public final static void getNewEntities(final ChatRoom chat) {
+		final Runnable outputMessages= new Runnable() { 
 			public void run() {
 				try {
 					for(Message m : chat.getMessages()) {
 						chatArea.append(m.getMessage() + "\n");
-						
 						chatArea.setCaretPosition(chatArea.getText().length());
 						scrollArea.getVerticalScrollBar().setValue(chatArea.getCaretPosition());
 					}
 				} catch (IOException e) {
-					e.printStackTrace();
+					
 				} catch (JSONException e) {
 					//Maybe add increasing interval operation here.
 					//WILL BE THROWN IF NO NEW MESSAGES
 				}
 			}
 		};
+		final Runnable outputUsers = new Runnable() {
+			public void run() {
+				System.out.println("test");
+				try {
+					for(User u : chat.getUsers()) {
+						System.out.println(u.getUsername());
+						userList.append(u.getUsername() + "\n");
+					}					
+				} catch (JSONException e) {
+					
+				} catch (IOException e) {
+					
+				}
+			}
+		};
 		@SuppressWarnings("unused")
-		final ScheduledFuture<?> poller = scheduler.scheduleWithFixedDelay(printMessages, 0, 1, SECONDS);
+		final ScheduledFuture<?> messages = scheduler.scheduleWithFixedDelay(outputMessages, 0, 1, SECONDS);
+		@SuppressWarnings("unused")
+		final ScheduledFuture<?> users = scheduler.scheduleWithFixedDelay(outputUsers, 0, 1, SECONDS);
 	}
 	
 	/**
@@ -192,12 +231,11 @@ public class ClientGUI {
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) throws IOException {
-		authenticate(args[0], args[1]);
 		new ClientGUI();
-		getNewMessages(chat);
+		getNewEntities(chat);
 	}
 	
-	private class messageActionHandler implements KeyListener {
+	private class MessageActionHandler implements KeyListener {
 
 		@Override
 		public void keyPressed(KeyEvent e) {
@@ -215,9 +253,6 @@ public class ClientGUI {
 					e1.printStackTrace();
 				}
 			}
-			else if(e.getKeyCode() == KeyEvent.VK_SPACE) {
-				JOptionPane.showMessageDialog(frame, "Chat Area: " + chatArea.getSize() + "Message Area: " + messageArea.getSize());
-			}
 		}
 
 		@Override
@@ -234,4 +269,123 @@ public class ClientGUI {
 		}
 		
 	}
+	
+	@SuppressWarnings("serial")
+	private class LoginDialog extends JDialog {
+		
+		private JTextField usernameField;
+		private JPasswordField passwordField;
+		private JLabel usernameLabel;
+		private JLabel passwordLabel;
+		private JButton loginBtn = new JButton("Login");
+		private JButton cancelBtn = new JButton("Cancel");
+		
+		public LoginDialog(Frame parent) {
+			super(parent, "Authenticate", true);
+			
+			JPanel dialog = new JPanel(new GridBagLayout());
+			GridBagConstraints c = new GridBagConstraints();
+			
+			c.fill = GridBagConstraints.HORIZONTAL;
+			
+			usernameLabel = new JLabel("Username: ");
+			c.gridx = 0;
+			c.gridy = 0;
+			c.gridwidth = 1;
+			dialog.add(usernameLabel, c);
+			
+			usernameField = new JTextField(20);
+			c.gridx = 1;
+			c.gridy = 0;
+			c.gridwidth = 2;
+			dialog.add(usernameField, c);
+			
+			passwordLabel = new JLabel("Password: ");
+			c.gridx = 0;
+			c.gridy = 1;
+			c.gridwidth = 2;
+			dialog.add(passwordLabel, c);
+			
+			passwordField = new JPasswordField(20);
+			c.gridx = 1;
+			c.gridy = 1;
+			c.gridwidth = 2;
+			dialog.add(passwordField, c);
+			
+			JPanel buttonPanel = new JPanel();
+			buttonPanel.add(loginBtn);
+			loginBtn.addActionListener(new loginHandler());
+			buttonPanel.add(cancelBtn);
+			cancelBtn.addActionListener(new cancelHandler());
+			getContentPane().add(dialog, BorderLayout.CENTER);
+			getContentPane().add(buttonPanel, BorderLayout.PAGE_END);
+			usernameField.addKeyListener(new enterHandler());
+			passwordField.addKeyListener(new enterHandler());
+		}
+		
+		private class loginHandler implements ActionListener {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					if(authenticate(usernameField.getText().trim(), new String(passwordField.getPassword()))) {
+						JOptionPane.showMessageDialog(LoginDialog.this, "Login Successful!", "Authentication Success", JOptionPane.INFORMATION_MESSAGE);
+						dispose();
+					}
+					else {
+						JOptionPane.showMessageDialog(LoginDialog.this, "Login Unsuccessful", "Authentication Failure", JOptionPane.ERROR_MESSAGE);
+					}
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			
+		}
+		
+		private class cancelHandler implements ActionListener {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(rootPane, LoginDialog.this.getSize());
+			}
+			
+		}
+		
+		private class enterHandler implements KeyListener {
+
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+					try {
+						if(authenticate(usernameField.getText().trim(), new String(passwordField.getPassword()))) {
+							JOptionPane.showMessageDialog(LoginDialog.this, "Login Successful!", "Authentication Success", JOptionPane.INFORMATION_MESSAGE);
+							dispose();
+						}
+						else {
+							JOptionPane.showMessageDialog(LoginDialog.this, "Login Unsuccessful", "Authentication Failure", JOptionPane.ERROR_MESSAGE);
+						}
+					} catch (HeadlessException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
+			}
+
+			@Override
+			public void keyReleased(KeyEvent e) {
+
+			}
+
+			@Override
+			public void keyTyped(KeyEvent e) {
+				
+			}
+			
+		}
+	}
+	
 }
