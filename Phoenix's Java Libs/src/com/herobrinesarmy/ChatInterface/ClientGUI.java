@@ -7,8 +7,6 @@ package com.herobrinesarmy.ChatInterface;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.DataOutputStream;
@@ -84,10 +82,8 @@ public class ClientGUI {
 		//TODO actionhandler
 		chatArea.setEditable(false);
 		chatArea.setLineWrap(true);
-//		scrollArea.getVerticalScrollBar().addAdjustmentListener(new autoScroll());
 		scrollArea.setAutoscrolls(true);
 		scrollArea.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-		//messageArea.setSize(80, 20);
 		frame.add(scrollArea);
 		frame.add(messageArea);
 		messageArea.addKeyListener(new messageActionHandler());
@@ -175,6 +171,7 @@ public class ClientGUI {
 				try {
 					for(Message m : chat.getMessages()) {
 						chatArea.append(m.getMessage() + "\n");
+						
 						chatArea.setCaretPosition(chatArea.getText().length());
 						scrollArea.getVerticalScrollBar().setValue(chatArea.getCaretPosition());
 					}
@@ -195,7 +192,7 @@ public class ClientGUI {
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) throws IOException {
-		authenticate("USERNAME", "PASS");
+		authenticate(args[0], args[1]);
 		new ClientGUI();
 		getNewMessages(chat);
 	}
@@ -204,7 +201,7 @@ public class ClientGUI {
 
 		@Override
 		public void keyPressed(KeyEvent e) {
-			if(e.getKeyCode() == KeyEvent.VK_ENTER && messageArea.getText() != null) {
+			if(e.getKeyCode() == KeyEvent.VK_ENTER) {
 				try {
 					chat.postMessage(messageArea.getText());
 				} catch (MalformedURLException e1) {
@@ -217,15 +214,17 @@ public class ClientGUI {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				messageArea.setText(null);
-				messageArea.setCaretPosition(0);
+			}
+			else if(e.getKeyCode() == KeyEvent.VK_SPACE) {
+				JOptionPane.showMessageDialog(frame, "Chat Area: " + chatArea.getSize() + "Message Area: " + messageArea.getSize());
 			}
 		}
 
 		@Override
 		public void keyReleased(KeyEvent e) {
-			// TODO Auto-generated method stub
-			
+			if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+				messageArea.setText("");
+			}
 		}
 
 		@Override
