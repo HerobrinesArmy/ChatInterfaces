@@ -50,9 +50,7 @@ public class User {
 	protected void populateFromProfileString(String string) {
 		if (string.contains("'element_username tag-"))
 			{
-				//this.userTag = Integer.parseInt(string.substring(string.indexOf('-')+1,string.indexOf("'>")));
-				//System.out.println(userTag);
-				System.out.println(string);
+				this.userTag = Integer.parseInt(string.substring(string.indexOf("tag-")+4,string.lastIndexOf("'>")));
 			}
 			this.username = string.substring(string.lastIndexOf("'>")+2,string.lastIndexOf("</"));
 	}
