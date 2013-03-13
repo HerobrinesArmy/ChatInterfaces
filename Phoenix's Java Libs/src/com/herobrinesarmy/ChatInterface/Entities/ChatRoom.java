@@ -73,7 +73,7 @@ public class ChatRoom {
 	 * Holds all of the users in an online session with their user ID as a key,
 	 * and the user as the even if they go offline, they will remain here
 	 */
-	private LinkedHashMap<Integer, User> users = new LinkedHashMap<Integer, User>();
+	private LinkedHashMap<Integer, User> users;
 	
 	//Holds all of the messages in an online session
 	private LinkedHashMap<Integer, Message> messages = new LinkedHashMap<Integer, Message>();
@@ -191,18 +191,17 @@ public class ChatRoom {
 	 */
 	@SuppressWarnings({ "rawtypes" })
 	private void parseUsers() throws JSONException, IOException {
+		users = new LinkedHashMap<Integer, User>();
 		JSONObject jsonUsers = poll().getJSONObject("users");
 		Iterator keys = jsonUsers.keys();
 		while(keys.hasNext()) {
 			String key = (String) keys.next();
 			JSONObject jsonUser = jsonUsers.getJSONObject(key);
 			int userID = jsonUser.getInt("user_id");
-			if(!users.containsKey(userID)) {
-				User user = new User(userID);
-				user.populateFromProfileString(jsonUser.getString("user"));
-				user.setOnline(true);
-				users.put(userID, user);
-			}
+			User user = new User(userID);
+			user.populateFromProfileString(jsonUser.getString("user"));
+			user.setOnline(true);
+			users.put(userID, user);
 		}
 	}	
 	
@@ -275,17 +274,23 @@ public class ChatRoom {
 		final ScheduledFuture<?> poller = scheduler.scheduleWithFixedDelay(printMessages, 0, INTERVAL, SECONDS);
 	}
 	
-	public Collection<User> getUsers() throws JSONException, IOException {
+	public User[] getUsers() throws JSONException, IOException {
 		parseUsers();
 		Collection<User> ul = users.values();
-		LinkedHashMap<Integer, User> onlineUsers = new LinkedHashMap<Integer, User>();
-		for(User u : ul) {
-			//if(!onlineUsers.containsKey(u.getUserID())) {
-				onlineUsers.put(u.getUserID(), u);
-			//}
+		User[] userList = ul.toArray(new User[0]);
+		User t;
+		int i, j;
+		int n = userList.length;
+		for(i = 0; i < n; i++){
+			for(j = 1; j < (n-i); j++){
+				if(userList[j-1].getUserTag() > userList[j].getUserTag()){
+					 t = userList[j-1];
+					 userList[j-1] = userList[j];
+					 userList[j] = t;
+				 }
+			 }
 		}
-//		User[] userList = onlineUsers.values().toArray(new User[0]);
-		return ul;
+		return userList;
 	}
 	
 //	private void updateChannelUsers(User user) {
