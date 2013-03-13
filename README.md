@@ -5,6 +5,11 @@ You will find the java source code for both the CLI client and GUI client here. 
 
 You can now run the GUI like any other application!
 
+## v1.2
+* Support for the "/me" command
+* User list now functions correctly, with offline users being removed
+* If the application looses focus, a row of hyphens is appended to the chat area to notify you where you were last
+
 ## v1.1
 * New colour scheme for easier reading
 * User list bar on the right is populated with users in chat (however if a user 'leaves' they will remain there)
