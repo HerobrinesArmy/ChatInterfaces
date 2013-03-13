@@ -11,6 +11,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowFocusListener;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -42,12 +44,15 @@ import com.herobrinesarmy.ChatInterface.Entities.User;
  * <p>
  * 
  * @author Phoenix
- * @version 1.1
+ * @version 1.2
  * @since 1.0
  * @see ChatRoom
  */
 
 public class ClientGUI {
+	//GUI Client Version
+	private final static String VERSION = "v1.2";
+	
 	//Encoding Format
 	private static String enc = "UTF-8";
 		
@@ -63,8 +68,8 @@ public class ClientGUI {
 	static ChatRoom chat = new ChatRoom(8613406);
 	
 	//GUI Components
-	private static JFrame frame = new JFrame("HA Chat Client v1.0");
-	//private Container contentPane;
+	private static JFrame frame = new JFrame("HA Chat Client " + VERSION);
+	//private Container contentPane
 	private JMenuBar menuBar = new JMenuBar();
 	private JMenu chatMenu = new JMenu("Options");
 	private JMenuItem auth = new JMenuItem("Authenticate");
@@ -73,11 +78,13 @@ public class ClientGUI {
 	private JTextArea messageArea = new JTextArea(5, 80);
 	private static JTextArea userList = new JTextArea(50,10);
 	private static JScrollPane scrollArea = new JScrollPane(chatArea);
+	private LoginDialog loginDialog;
 	
 	public ClientGUI() {		
 //		contentPane = frame.getContentPane();
 //		contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
 		frame.setJMenuBar(menuBar);
+		frame.addWindowFocusListener(new focusHandler());
 		menuBar.add(chatMenu);
 		chatMenu.add(auth);
 		//TODO actionhandler
@@ -112,7 +119,7 @@ public class ClientGUI {
 		frame.pack();
 		frame.setVisible(true);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		LoginDialog loginDialog = new LoginDialog(frame);
+		loginDialog = new LoginDialog(frame);
 		loginDialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
 		loginDialog.setSize(new Dimension(420,150));
 		loginDialog.setVisible(true);
@@ -208,10 +215,11 @@ public class ClientGUI {
 		final Runnable outputUsers = new Runnable() {
 			public void run() {
 				try {
+					User[] ul = chat.getUsers();
 					userList.setText(null);
-					for(User u : chat.getUsers()) {
+					for(User u : ul) {
 						userList.append(u.getUsername() + "\n");
-					}					
+					}
 				} catch (JSONException e) {
 					
 				} catch (IOException e) {
@@ -222,7 +230,7 @@ public class ClientGUI {
 		@SuppressWarnings("unused")
 		final ScheduledFuture<?> messages = scheduler.scheduleWithFixedDelay(outputMessages, 0, 1, SECONDS);
 		@SuppressWarnings("unused")
-		final ScheduledFuture<?> users = scheduler.scheduleWithFixedDelay(outputUsers, 0, 1, SECONDS);
+		final ScheduledFuture<?> users = scheduler.scheduleWithFixedDelay(outputUsers, 0, 30, SECONDS);
 	}
 	
 	/**
@@ -232,6 +240,27 @@ public class ClientGUI {
 	public static void main(String[] args) throws IOException {
 		new ClientGUI();
 		getNewEntities(chat);
+	}
+	
+	private class focusHandler implements WindowFocusListener {
+
+		@Override
+		public void windowGainedFocus(WindowEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void windowLostFocus(WindowEvent e) {
+			// TODO Auto-generated method stub
+			if(chatArea.getText().length() != 0) {
+				for(int i = 0; i < chatArea.getColumns(); i++) {
+					chatArea.append("-");
+				}
+				chatArea.append("\n");
+			}
+		}
+
 	}
 	
 	private class MessageActionHandler implements KeyListener {
