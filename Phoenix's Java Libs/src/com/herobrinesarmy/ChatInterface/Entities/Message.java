@@ -92,14 +92,16 @@ public class Message {
 				}
 			}
 		}
-//		else if(text.contains("<br />")) {
-//				text = text.replaceAll("<br />", "");
-//				System.out.println(text);
-//		}
 		return text;
 	}
 	
 	public String getMessage() {
-		return StringEscapeUtils.unescapeHtml4("[" + timestamp + "] " + user + ": " + messageText);
+		if(messageText.startsWith("/me")) {
+			messageText = messageText.substring(messageText.indexOf("/me") + 3);
+			return StringEscapeUtils.unescapeHtml4("[" + timestamp + "] " + user + messageText);
+		}
+		else {
+			return StringEscapeUtils.unescapeHtml4("[" + timestamp + "] " + user + ": " + messageText);
+		}
 	}
 }
