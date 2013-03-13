@@ -1,6 +1,0 @@
-TODO:
--Tidy up
--Add comments to class files and make sure java docs are readable
--Messages need to handle "/me"
--GUI to use color tags for usernames
--HANDLE ALL THE EXCEPTIONS!
