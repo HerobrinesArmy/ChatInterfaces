@@ -42,7 +42,7 @@ import com.herobrinesarmy.ChatInterface.Entities.User;
  * <p>
  * 
  * @author Phoenix
- * @version 1.0
+ * @version 1.1
  * @since 1.0
  * @see ChatRoom
  */
@@ -222,7 +222,7 @@ public class ClientGUI {
 		@SuppressWarnings("unused")
 		final ScheduledFuture<?> messages = scheduler.scheduleWithFixedDelay(outputMessages, 0, 1, SECONDS);
 		@SuppressWarnings("unused")
-		final ScheduledFuture<?> users = scheduler.scheduleWithFixedDelay(outputUsers, 0, 30, SECONDS);
+		final ScheduledFuture<?> users = scheduler.scheduleWithFixedDelay(outputUsers, 0, 1, SECONDS);
 	}
 	
 	/**
