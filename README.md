@@ -1,9 +1,20 @@
 Phoenix's Java Client
-==================
+=====================
 
 You will find the java source code for both the CLI client and GUI client here. I have also included the jar executables in /bin. Since the GUI was my ultimate goal, I will not be supporting the CLI client anymore. You are welcome to fork it, edit it, do what you want with it! However, I would like to focus on the GUI, and thusly, will not be answering anymore questions to do with it.
 
 You can now run the GUI like any other application!
+Commands:
+* "/mute <username>" to mute a user (unmute coming :P)
+* "/wolf" to post a random wolf (ability to select wolf coming)
+
+## v1.3
+* Client and it's dialogs are now centered
+* Cleaned up menu
+* You can now call the authentication dialog from the menu
+* Quit now quits
+* Ability to mute users with "/mute"
+* Wolves!
 
 ## v1.2
 * Support for the "/me" command
