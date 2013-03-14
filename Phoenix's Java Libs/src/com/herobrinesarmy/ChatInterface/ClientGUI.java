@@ -14,6 +14,9 @@ import java.awt.event.KeyListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.CookieManager;
@@ -28,13 +31,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import javax.swing.*;
-//import javax.swing.text.AttributeSet;
-//import javax.swing.text.BadLocationException;
-//import javax.swing.text.DefaultStyledDocument;
-//import javax.swing.text.SimpleAttributeSet;
-//import javax.swing.text.Style;
-//import javax.swing.text.StyleConstants;
-//import javax.swing.text.StyleContext;
 
 import org.json.JSONException;
 
@@ -59,7 +55,7 @@ import com.herobrinesarmy.ChatInterface.Entities.User;
 
 public class ClientGUI {
 	//GUI Client Version
-	private final static String VERSION = "v1.3";
+	private static String FRAME_TITLE = "HA Chat Client v1.3";
 	
 	//Encoding Format
 	private static String enc = "UTF-8";
@@ -81,19 +77,22 @@ public class ClientGUI {
 	//
 	static User[] ul = new User[0];
 	
+	ArrayList<String> wolvesList;
+	
 //	//String to hold username
 //	static String username;
 	
 	//GUI Components
-	private static JFrame frame = new JFrame("HA Chat Client " + VERSION);
+	private static JFrame frame = new JFrame(FRAME_TITLE);
 	//private Container contentPane
 	private JMenuBar menuBar = new JMenuBar();
-	private JMenu mute = new JMenu("Mute");
-	private JMenuItem muteUser = new JMenuItem("Mute User");
-	private JMenuItem unmuteUser = new JMenuItem("Unmute User");
-	private JMenu auth = new JMenu("Authenticate");
-	private JMenu about = new JMenu("About");
-	private JMenu quit = new JMenu("Quit");
+//	private JMenu mute = new JMenu("Mute");
+//	private JMenuItem muteUser = new JMenuItem("Mute User");
+//	private JMenuItem unmuteUser = new JMenuItem("Unmute User");
+	private JMenu chatMenu = new JMenu("Chat");
+	private JMenuItem auth = new JMenuItem("Authenticate");
+	private JMenuItem about = new JMenuItem("About");
+	private JMenuItem quit = new JMenuItem("Quit");
 	private static JTextArea chatArea = new JTextArea(40, 80);
 	private JTextArea messageArea = new JTextArea(5, 80);
 	private static JTextArea userList = new JTextArea(50,10);
@@ -108,17 +107,18 @@ public class ClientGUI {
 //		contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
 		frame.setJMenuBar(menuBar);
 		frame.addWindowFocusListener(new FocusHandler());
-		menuBar.add(auth);
-		//TODO actionhandler
+		menuBar.add(chatMenu);
+		chatMenu.add(auth);
+		auth.addActionListener(new AuthHandler());
 //		menuBar.add(mute);
 //		mute.add(muteUser);
 //		muteUser.addActionListener(new MuteHandler());
 //		mute.add(unmuteUser);
 //		unmuteUser.addActionListener(new UnmuteHandler());
-		menuBar.add(about);
+		chatMenu.add(about);
 		//TODO actionhandler
-		menuBar.add(quit);
-		//TODO actionhandler
+		chatMenu.add(quit);
+		quit.addActionListener(new QuitHandler());
 		chatArea.setEditable(false);
 		chatArea.setLineWrap(true);
 		scrollArea.setAutoscrolls(true);
@@ -146,12 +146,16 @@ public class ClientGUI {
 		frame.add(textPanels, BorderLayout.CENTER);
 		frame.add(userList, BorderLayout.EAST);
 		frame.pack();
+		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		loginDialog = new LoginDialog(frame);
 		loginDialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
 		loginDialog.setSize(new Dimension(420,150));
+		loginDialog.setLocationRelativeTo(null);
+		loginDialog.setResizable(false);
 		loginDialog.setVisible(true);
+		loadWolves();
 //		initTagValues();
 	}
 	
@@ -270,12 +274,28 @@ public class ClientGUI {
 //		doc.setCharacterAttributes(doc.getLength()+1, usrName.length(), (AttributeSet) Color.RED, true);
 //	}
 	
-	public String[] chatUsers() throws JSONException, IOException {
-		ArrayList<String> usernames = new ArrayList<String>();
-		for(User u : chat.getUsers()) {
-			usernames.add(u.getUsername());
+//	public String[] chatUsers() throws JSONException, IOException {
+//		ArrayList<String> usernames = new ArrayList<String>();
+//		for(User u : chat.getUsers()) {
+//			usernames.add(u.getUsername());
+//		}
+//		return usernames.toArray(new String[0]);
+//	}
+	
+	public void loadWolves() {
+		File wolves = new File("wolf.txt");
+		wolvesList = new ArrayList<String>();
+		Scanner readFile = null;
+		try {
+			readFile = new Scanner(new FileInputStream(wolves));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		return usernames.toArray(new String[0]);
+		while(readFile.hasNext()) {
+			wolvesList.add(readFile.nextLine());
+		}
+		System.out.println(System.getProperty("user.dir"));
 	}
 	
 	/**
@@ -337,6 +357,29 @@ public class ClientGUI {
 		getNewEntities(chat);
 	}
 	
+	private class AuthHandler implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			loginDialog = new LoginDialog(frame);
+			loginDialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+			loginDialog.setSize(new Dimension(420,150));
+			loginDialog.setLocationRelativeTo(null);
+			loginDialog.setResizable(false);
+			loginDialog.setVisible(true);
+		}
+		
+	}
+	
+	private class QuitHandler implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			System.exit(0);
+		}
+		
+	}
+	
 	private class FocusHandler implements WindowFocusListener {
 
 		@Override
@@ -348,7 +391,8 @@ public class ClientGUI {
 		@Override
 		public void windowLostFocus(WindowEvent e) {
 			// TODO Auto-generated method stub
-			if(chatArea.getText().length() != 0 && !frame.isFocusOwner()) {
+//			chatArea.getText().length() != 0 ||
+			if(!loginDialog.isShowing()) {
 				for(int i = 0; i < chatArea.getColumns(); i++) {
 					chatArea.append("-");
 				}
@@ -376,7 +420,8 @@ public class ClientGUI {
 						}
 					}
 					else if(messageArea.getText().startsWith("/wolf")) {
-						
+						int randomWolf = (int)(Math.random() * 328);
+						chat.postMessage("[img]" + wolvesList.get(randomWolf) + "[/img]");
 					}
 					else {
 						chat.postMessage(messageArea.getText());
@@ -509,16 +554,16 @@ public class ClientGUI {
 			
 			JPanel buttonPanel = new JPanel();
 			buttonPanel.add(loginBtn);
-			loginBtn.addActionListener(new loginHandler());
+			loginBtn.addActionListener(new LoginHandler());
 			buttonPanel.add(cancelBtn);
-			cancelBtn.addActionListener(new cancelHandler());
+			cancelBtn.addActionListener(new LoginCancelHandler());
 			getContentPane().add(dialog, BorderLayout.CENTER);
 			getContentPane().add(buttonPanel, BorderLayout.PAGE_END);
-			usernameField.addKeyListener(new enterHandler());
-			passwordField.addKeyListener(new enterHandler());
+			usernameField.addKeyListener(new LoginEnterHandler());
+			passwordField.addKeyListener(new LoginEnterHandler());
 		}
 		
-		private class loginHandler implements ActionListener {
+		private class LoginHandler implements ActionListener {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -539,16 +584,16 @@ public class ClientGUI {
 			
 		}
 		
-		private class cancelHandler implements ActionListener {
+		private class LoginCancelHandler implements ActionListener {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JOptionPane.showMessageDialog(rootPane, LoginDialog.this.getSize());
+				dispose();
 			}
 			
 		}
 		
-		private class enterHandler implements KeyListener {
+		private class LoginEnterHandler implements KeyListener {
 
 			@Override
 			public void keyPressed(KeyEvent e) {
