@@ -21,12 +21,20 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import javax.swing.*;
+//import javax.swing.text.AttributeSet;
+//import javax.swing.text.BadLocationException;
+//import javax.swing.text.DefaultStyledDocument;
+//import javax.swing.text.SimpleAttributeSet;
+//import javax.swing.text.Style;
+//import javax.swing.text.StyleConstants;
+//import javax.swing.text.StyleContext;
 
 import org.json.JSONException;
 
@@ -44,14 +52,14 @@ import com.herobrinesarmy.ChatInterface.Entities.User;
  * <p>
  * 
  * @author Phoenix
- * @version 1.2
+ * @version 1.3
  * @since 1.0
  * @see ChatRoom
  */
 
 public class ClientGUI {
 	//GUI Client Version
-	private final static String VERSION = "v1.2";
+	private final static String VERSION = "v1.3";
 	
 	//Encoding Format
 	private static String enc = "UTF-8";
@@ -62,33 +70,54 @@ public class ClientGUI {
 	//Collection for chats
 	private LinkedHashMap<Integer, ChatRoom> chats = new LinkedHashMap<Integer, ChatRoom>();
 	
+	//Collection for styles and user tags
+//	private static LinkedHashMap<Integer, SimpleAttributeSet> userStyles = new LinkedHashMap<Integer, SimpleAttributeSet>();
+	
 	//The scheduler service for the getMessages() thread
 	private final static ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 	
 	static ChatRoom chat = new ChatRoom(8613406);
 	
+	//
+	static User[] ul = new User[0];
+	
+//	//String to hold username
+//	static String username;
+	
 	//GUI Components
 	private static JFrame frame = new JFrame("HA Chat Client " + VERSION);
 	//private Container contentPane
 	private JMenuBar menuBar = new JMenuBar();
-	private JMenu chatMenu = new JMenu("Options");
-	private JMenuItem auth = new JMenuItem("Authenticate");
-	private JMenuItem quit = new JMenuItem("Quit");
+	private JMenu mute = new JMenu("Mute");
+	private JMenuItem muteUser = new JMenuItem("Mute User");
+	private JMenuItem unmuteUser = new JMenuItem("Unmute User");
+	private JMenu auth = new JMenu("Authenticate");
+	private JMenu about = new JMenu("About");
+	private JMenu quit = new JMenu("Quit");
 	private static JTextArea chatArea = new JTextArea(40, 80);
 	private JTextArea messageArea = new JTextArea(5, 80);
 	private static JTextArea userList = new JTextArea(50,10);
 	private static JScrollPane scrollArea = new JScrollPane(chatArea);
+//	private final static StyleContext sc = new StyleContext();
+//	private final static DefaultStyledDocument doc = new DefaultStyledDocument(sc);
+//	private static JTextPane userPane = new JTextPane(doc);
 	private LoginDialog loginDialog;
 	
 	public ClientGUI() {		
 //		contentPane = frame.getContentPane();
 //		contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
 		frame.setJMenuBar(menuBar);
-		frame.addWindowFocusListener(new focusHandler());
-		menuBar.add(chatMenu);
-		chatMenu.add(auth);
+		frame.addWindowFocusListener(new FocusHandler());
+		menuBar.add(auth);
 		//TODO actionhandler
-		chatMenu.add(quit);
+//		menuBar.add(mute);
+//		mute.add(muteUser);
+//		muteUser.addActionListener(new MuteHandler());
+//		mute.add(unmuteUser);
+//		unmuteUser.addActionListener(new UnmuteHandler());
+		menuBar.add(about);
+		//TODO actionhandler
+		menuBar.add(quit);
 		//TODO actionhandler
 		chatArea.setEditable(false);
 		chatArea.setLineWrap(true);
@@ -110,10 +139,10 @@ public class ClientGUI {
 		textPanels.setLayout(new BoxLayout(textPanels, BoxLayout.Y_AXIS));
 		textPanels.add(scrollArea);
 		textPanels.add(messageArea);
-
+//		userPane.setVisible(true);
+//		userPane.setEditable(false);
+//		userPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
 		messageArea.addKeyListener(new MessageActionHandler());
-//		frame.add(scrollArea);
-//		frame.add(messageArea);
 		frame.add(textPanels, BorderLayout.CENTER);
 		frame.add(userList, BorderLayout.EAST);
 		frame.pack();
@@ -123,6 +152,7 @@ public class ClientGUI {
 		loginDialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
 		loginDialog.setSize(new Dimension(420,150));
 		loginDialog.setVisible(true);
+//		initTagValues();
 	}
 	
 	/**
@@ -190,6 +220,64 @@ public class ClientGUI {
 		chats.put(chat.getChannel(), chat);
 	}
 	
+//	public void initTagValues() {
+//		userPane.setBackground(Color.BLACK);
+//		Style defaultStyle = sc.getStyle(StyleContext.DEFAULT_STYLE);
+//		StyleConstants.setFontFamily(defaultStyle, "Verdana");
+//		StyleConstants.setFontSize(defaultStyle, 14);
+//		//StyleConstants.setForeground(defaultStyle, Color.WHITE);
+//		
+////		final Style herobrine = sc.addStyle("herobrine", defaultStyle);
+//		SimpleAttributeSet herobrine = new SimpleAttributeSet();
+//		//decode("#D12626")
+//		StyleConstants.setForeground(herobrine, Color.RED);
+//		final Style highCommand = sc.addStyle("highcommand", defaultStyle);
+//		//.decode("#ffff00")
+//		StyleConstants.setForeground(highCommand, Color.YELLOW);
+//		final Style science = sc.addStyle("science", defaultStyle);
+//		StyleConstants.setForeground(science, Color.decode("#3888ff"));
+//		final Style aerospace = sc.addStyle("aerospace", defaultStyle);
+//		StyleConstants.setForeground(aerospace, Color.decode("#d46a00"));
+//		final Style fleet = sc.addStyle("fleet", defaultStyle);
+//		StyleConstants.setForeground(fleet, Color.decode("#dd2423"));
+//		final Style acquisitor = sc.addStyle("acquisitor", defaultStyle);
+//		StyleConstants.setForeground(acquisitor, Color.decode("#007500"));
+//		final Style transport = sc.addStyle("transport", defaultStyle);
+//		StyleConstants.setForeground(transport, Color.decode("#82329c"));
+//		final Style notEnlisted = sc.addStyle("notenlisted", defaultStyle);
+//		StyleConstants.setForeground(notEnlisted, Color.decode("#a6a6a6"));
+//		
+//		//Aerospace
+////		userStyles.put(228373, aerospace);
+////		//Science
+////		userStyles.put(228361, science);
+////		//Transport
+////		userStyles.put(228640, transport);
+////		//Fleet
+////		userStyles.put(228677, fleet);
+////		//Acquisitor
+////		userStyles.put(232043, acquisitor);
+////		//Not Enlisted
+////		userStyles.put(271886, notEnlisted);
+////		//High Command
+////		userStyles.put(228080, highCommand);
+//		//Herobrine
+//		userStyles.put(223534, herobrine);
+//	}
+//	
+//	public static void addUserColour(int usrTag, String usrName) throws BadLocationException {
+//		doc.insertString(doc.getLength(), usrName + "\n", null);
+//		doc.setCharacterAttributes(doc.getLength()+1, usrName.length(), (AttributeSet) Color.RED, true);
+//	}
+	
+	public String[] chatUsers() throws JSONException, IOException {
+		ArrayList<String> usernames = new ArrayList<String>();
+		for(User u : chat.getUsers()) {
+			usernames.add(u.getUsername());
+		}
+		return usernames.toArray(new String[0]);
+	}
+	
 	/**
 	 * A simple thread management method. It creates the thread to run the printing of messages, then schedules
 	 * this thread to run every second, getting message updates from the chat every second. If no messages are
@@ -215,10 +303,17 @@ public class ClientGUI {
 		final Runnable outputUsers = new Runnable() {
 			public void run() {
 				try {
-					User[] ul = chat.getUsers();
+					ul = chat.getUsers();
 					userList.setText(null);
+//					userPane.setText(null);
 					for(User u : ul) {
 						userList.append(u.getUsername() + "\n");
+//						try {
+//							addUserColour(u.getUserID(), u.getUsername());
+//						} catch (BadLocationException e) {
+//							// TODO Auto-generated catch block
+//							e.printStackTrace();
+//						}
 					}
 				} catch (JSONException e) {
 					
@@ -242,7 +337,7 @@ public class ClientGUI {
 		getNewEntities(chat);
 	}
 	
-	private class focusHandler implements WindowFocusListener {
+	private class FocusHandler implements WindowFocusListener {
 
 		@Override
 		public void windowGainedFocus(WindowEvent e) {
@@ -253,7 +348,7 @@ public class ClientGUI {
 		@Override
 		public void windowLostFocus(WindowEvent e) {
 			// TODO Auto-generated method stub
-			if(chatArea.getText().length() != 0) {
+			if(chatArea.getText().length() != 0 && !frame.isFocusOwner()) {
 				for(int i = 0; i < chatArea.getColumns(); i++) {
 					chatArea.append("-");
 				}
@@ -269,7 +364,23 @@ public class ClientGUI {
 		public void keyPressed(KeyEvent e) {
 			if(e.getKeyCode() == KeyEvent.VK_ENTER) {
 				try {
-					chat.postMessage(messageArea.getText());
+					if(messageArea.getText().startsWith("/mute")) {
+						String user = messageArea.getText().substring(messageArea.getText().indexOf("/mute") + 5).trim();
+						try {
+							if(chat.muteUser(chat.getUserID(user))) {
+								JOptionPane.showMessageDialog(frame, user + " muted.", "Success", JOptionPane.INFORMATION_MESSAGE);
+							}
+						} catch (JSONException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+					}
+					else if(messageArea.getText().startsWith("/wolf")) {
+						
+					}
+					else {
+						chat.postMessage(messageArea.getText());
+					}
 				} catch (MalformedURLException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -297,6 +408,62 @@ public class ClientGUI {
 		}
 		
 	}
+	
+//	private class MuteHandler implements ActionListener {
+//
+//		@Override
+//		public void actionPerformed(ActionEvent e) {
+////			String user = (String) JOptionPane.showInputDialog(frame, "Select the user to mute:", "Mute User", JOptionPane.PLAIN_MESSAGE,
+//			try {
+//				String username = (String) JOptionPane.showInputDialog(frame, "Select the user to mute:", "Mute User", JOptionPane.PLAIN_MESSAGE, null, ul, null);
+//				for(User u : ul) {
+//					if(u.getUsername().equals(username)) {
+//						if(chat.muteUser(u.getUserID())) {
+//							JOptionPane.showMessageDialog(frame, username + " muted.", "Success", JOptionPane.INFORMATION_MESSAGE);
+//						}
+//					}
+//				}
+//			} catch (HeadlessException er) {
+//				// TODO Auto-generated catch block
+//				er.printStackTrace();
+//			} catch (JSONException er) {
+//				// TODO Auto-generated catch block
+//				er.printStackTrace();
+//			} catch (IOException er) {
+//				// TODO Auto-generated catch block
+//				er.printStackTrace();
+//			}
+//		}
+//		
+//	}
+	
+//	private class UnmuteHandler implements ActionListener {
+//
+//		@Override
+//		public void actionPerformed(ActionEvent e) {
+////			String user = (String) JOptionPane.showInputDialog(frame, "Select the user to mute:", "Mute User", JOptionPane.PLAIN_MESSAGE,
+//			try {
+//				String username = (String) JOptionPane.showInputDialog(frame, "Select the user to unmute:", "Unmute User", JOptionPane.PLAIN_MESSAGE, null, chatUsers(), null);
+//				for(User u : chat.getUsers()) {
+//					if(u.getUsername().equals(username)) {
+//						if(chat.unmuteUser(u.getUserID())) {
+//							JOptionPane.showMessageDialog(frame, username + " unmuted.", "Success", JOptionPane.INFORMATION_MESSAGE);
+//						}
+//					}
+//				}
+//			} catch (HeadlessException er) {
+//				// TODO Auto-generated catch block
+//				er.printStackTrace();
+//			} catch (JSONException er) {
+//				// TODO Auto-generated catch block
+//				er.printStackTrace();
+//			} catch (IOException er) {
+//				// TODO Auto-generated catch block
+//				er.printStackTrace();
+//			}
+//		}
+//		
+//	}
 	
 	@SuppressWarnings("serial")
 	private class LoginDialog extends JDialog {
@@ -358,6 +525,7 @@ public class ClientGUI {
 				try {
 					if(authenticate(usernameField.getText().trim(), new String(passwordField.getPassword()))) {
 						JOptionPane.showMessageDialog(LoginDialog.this, "Login Successful!", "Authentication Success", JOptionPane.INFORMATION_MESSAGE);
+//						username = usernameField.getText();
 						dispose();
 					}
 					else {
