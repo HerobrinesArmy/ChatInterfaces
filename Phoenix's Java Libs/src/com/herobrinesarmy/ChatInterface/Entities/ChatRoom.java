@@ -293,6 +293,44 @@ public class ChatRoom {
 		return userList;
 	}
 	
+	public int getUserID(String name) {
+		Collection<User> ul = users.values();
+		for(User u : ul) {
+			if(u.getUsername().equals(name)) {
+				return u.getUserID();
+			}
+		}
+		return 0;
+	}
+	
+	public boolean muteUser(int userID) throws JSONException, IOException {
+		URL url = new URL("http://herobrinesarmy.com/mute.php?&o=1&m=" + userID);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setDoInput(true);
+        Scanner reader = new Scanner(conn.getInputStream());
+        String result = "";
+        while(reader.hasNext()) {
+        	result += reader.nextLine();
+        }
+		JSONObject jsonMute = new JSONObject(result.substring(1, result.length()));
+		return jsonMute.getBoolean("success");
+	}
+	
+	public boolean unmuteUser(int userID) throws JSONException, IOException {
+		URL url = new URL("http://herobrinesarmy.com/mute.php?&o=0&m=" + userID);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setDoInput(true);
+        Scanner reader = new Scanner(conn.getInputStream());
+        String result = "";
+        while(reader.hasNext()) {
+        	result += reader.nextLine();
+        }
+		JSONObject jsonMute = new JSONObject(result.substring(1, result.length()));
+		return jsonMute.getBoolean("success");
+	}
+	
 //	private void updateChannelUsers(User user) {
 //		//TODO pollUsers to update channel user list, or have "hidden"
 //		//messages for libs to use to remove users from chan list
