@@ -1,3 +1,5 @@
+Please do not modify the script in this repo directly, fork it instead. Basically, if you mess up my working copy I will have to kill you.
+
 This script is designed to post in the Herobrine's Army chat room. Typing plain text into the terminal will just send a message.
 YOU MUST USE /exit OR /logout TO EXIT THE SCRIPT, OR SOME OF IT WILL CONTINUE TO RUN IN THE BACKGROUND.
 Commands:
