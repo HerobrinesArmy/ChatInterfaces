@@ -1,0 +1,4 @@
+Bash client:
+
+Java GUI client:
+Windows 7 64 bit
