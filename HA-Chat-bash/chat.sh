@@ -1,8 +1,8 @@
 #!/bin/bash -i
-# Version 1.0.3
+# Version 1.1.0
 trap 'echo "Use the /exit or /logout command instead"' INT QUIT
 
-VERSION="1.0.3"
+VERSION="1.1.0"
 
 # The postMessage function takes a single argument of the data you would like to post, and urlencodes and posts it
 postMessage ()
@@ -132,6 +132,17 @@ while :
                     curl -s -b cookie -c cookie "http://herobrinesarmy.com/mute.php?o=0&m=${UNMUTE_ID}" >/dev/null 2>&1
                     else
                     echo "You need to enter your target."
+                fi
+                ;;
+            /profile*)
+                MESSAGE_LENGTH=$( echo $MESSAGE | wc -w )
+                if [ $MESSAGE_LENGTH -gt 1 ]
+                    then
+                    PROFILE_ARG1=$( echo $MESSAGE | cut -d' ' -f2- )
+                    PROFILE=$( curl -s -L -b cookie -c cookie "http://herobrinesarmy.com/update_chat2.php?c=${CHAT_ROOM}&l=0" | sed 's/^.\(.*\).$/\1/' | sed "s/,/\\`echo -e '\n\r'`/g"| sed "s/:{/\\`echo -e '\n\r'`/g" | grep '"user":\|"user_id":' | cut -d "{" -f 2 | cut -d "}" -f 2 | sed 's/<[^>]\+>//g' | cut -d '"' -f 4 | sed '/^$/d' | awk '!_[$0]++' | sed '$!N;s/\n/ /' | grep -i "$PROFILE_ARG1" | cut -f 1 -d ' ' )
+                    echo "http://herobrinesarmy.enjin.com/profile/${PROFILE}"
+                    else
+                    echo "You must enter a name."
                 fi
                 ;;
             /users)

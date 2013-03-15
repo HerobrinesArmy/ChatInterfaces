@@ -19,3 +19,4 @@ Commands:
 /pastebin                         #This posts the content of your clipboard on pastebin and posts a link in chat
 /pastebin <file>                  #This posts a file to pastebin and posts a link in chat
 /version                          #This displays the current version number of the script
+/profile <username>               #This gives a link to someone's profile on enjin
