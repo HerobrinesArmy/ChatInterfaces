@@ -1,13 +1,14 @@
 #!/bin/bash -i
-# Version 1.1.0
+# Version 1.1.1
 trap 'echo "Use the /exit or /logout command instead"' INT QUIT
 
-VERSION="1.1.0"
+VERSION="1.1.1"
 
 # The postMessage function takes a single argument of the data you would like to post, and urlencodes and posts it
 postMessage ()
 {
     local ENCODED_MESSAGE=$( urlEncode "$1" )
+    auth
     curl -m 60 -L -b cookie -c cookie "http://herobrinesarmy.com/post_chat.php?c=${CHAT_ROOM}&o=1&m=${ENCODED_MESSAGE}" >/dev/null 2>&1
 }
 
@@ -74,7 +75,6 @@ WOLF_LINES=$( cat wolf.txt | wc -l )
 while :
     do
         read -e MESSAGE
-        auth
         case "$MESSAGE" in
             /wolf*)
                 MESSAGE_LENGTH=$( echo $MESSAGE | wc -w )
