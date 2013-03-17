@@ -1,8 +1,8 @@
 #!/bin/bash -i
-# Version 1.1.1
+# Version 1.1.2
 trap 'kill ${GETMESSAGES_PID}; exit 0;' INT QUIT
 
-VERSION="1.1.1"
+VERSION="1.1.2"
 
 # The postMessage function takes a single argument of the data you would like to post, and urlencodes and posts it
 postMessage ()
@@ -18,7 +18,7 @@ getMessages ()
     LMID="0"
     while :
         do
-            local JSON_INPUT=$( curl -m 40 -s -L -b cookie -c cookie "http://herobrinesarmy.com/update_chat2.php?c=${1}&l=${LMID}&p=0" )
+            local JSON_INPUT=$( curl -m 60 -s -L -b cookie -c cookie "http://herobrinesarmy.com/update_chat2.php?c=${1}&l=${LMID}&p=0" )
             if [ -n "$JSON_INPUT" ]
                 then
                 LMID=$( echo $JSON_INPUT | sed "s/,/\\`echo -e '\n\r'`/g" | grep '"lmid":"' | cut -d '"' -f 4 )
