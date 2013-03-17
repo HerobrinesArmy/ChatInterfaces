@@ -1,6 +1,6 @@
 #!/bin/bash -i
 # Version 1.1.1
-trap 'echo "Use the /exit or /logout command instead"' INT QUIT
+trap 'kill ${GETMESSAGES_PID}; exit 0;' INT QUIT
 
 VERSION="1.1.1"
 
