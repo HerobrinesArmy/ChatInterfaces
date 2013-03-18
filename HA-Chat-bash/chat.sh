@@ -1,9 +1,9 @@
 #!/bin/bash -i
-# Version 1.1.4
+# Version 1.1.5
 trap 'kill ${GETMESSAGES_PID}; exit 0;' INT QUIT
 GLOBIGNORE="*"
 
-VERSION="1.1.4"
+VERSION="1.1.5"
 
 # The postMessage function takes a single argument of the data you would like to post, and urlencodes and posts it
 postMessage ()
@@ -24,7 +24,7 @@ getMessages ()
                 then
                 LMID=$( echo $JSON_INPUT | sed "s/,/\\`echo -e '\n\r'`/g" | grep '"lmid":"' | cut -d '"' -f 4 )
             fi
-            local INCOMING_MESSAGE=$( echo $JSON_INPUT | sed s/'"users":.*'/''/ | sed 's/,\"/\\\r\n\"/g' | sed s'/..$//' | grep '"user":\|"message":' | cut -d '"' -f4- | sed 's/\\\//\//g'  | sed 's/\(.*\)./\1/' | sed 's/<[^>]\+>//g' | sed "s/\]\[/\] \[/g" | sed "s/\[[^]]*\]//g" | awk '{ if ( ( NR % 2 ) == 0 ) { printf("%s\n",$0) } else { printf("%s: ",$0) } }' | sed 's/&amp;/\&/g' | sed 's/&lt;/</g' | sed 's/&gt;/>/g' | sed 's/&quot;/"/g' |  sed -e 's/\([^:]*[^:]\)/\\033\[1;34m\1\\033\[0m/1' | sed -e 's/\([^:]*[^:]\): \/me/\*\1/1' )
+            local INCOMING_MESSAGE=$( echo $JSON_INPUT | sed s/'"users":.*'/''/ | sed 's/,\"/\\\r\n\"/g' | sed s'/..$//' | grep '"user":\|"message":' | cut -d '"' -f4- | sed 's/\\\//\//g'  | sed 's/\(.*\)./\1/' | sed 's/<[^>]\+>//g' | sed "s/\]\[/\] \[/g" | sed "s/\[[^]]*\]//g" | awk '{ if ( ( NR % 2 ) == 0 ) { printf("%s\n",$0) } else { printf("%s: ",$0) } }' | sed 's/&amp;/\&/g' | sed 's/&lt;/</g' | sed 's/&gt;/>/g' | sed 's/&quot;/"/g' |  sed -e 's/\([^:]*[^:]\)/\\033\[1;34m\1\\033\[0m/1' | sed -e 's/\([^:]*[^:]\): \/me \?/\*\1 /1' )
             if [ -n "$INCOMING_MESSAGE" ]
                 then
                     if [ "$LMID" != "$LMID_PREVIOUS" ]
