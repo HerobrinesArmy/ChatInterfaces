@@ -202,7 +202,7 @@ while :
                 echo "$VERSION"
                 ;;
             /ping)
-                ping -c1 herobrinesarmy.com > /dev/null && echo "PONG!" || echo "FAILURE!"
+                ping -c1 herobrinesarmy.com | grep rtt | cut -d'/' -f5
                 ;;
             /logout)
                 kill $GETMESSAGES_PID
