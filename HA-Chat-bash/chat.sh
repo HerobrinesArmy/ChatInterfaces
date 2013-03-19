@@ -1,9 +1,9 @@
 #!/bin/bash -i
-# Version 1.1.5
+# Version 1.1.6
 trap 'kill ${GETMESSAGES_PID}; exit 0;' INT QUIT
 GLOBIGNORE="*"
 
-VERSION="1.1.5"
+VERSION="1.1.6"
 
 # The postMessage function takes a single argument of the data you would like to post, and urlencodes and posts it
 postMessage ()
