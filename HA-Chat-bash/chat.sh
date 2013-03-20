@@ -1,9 +1,9 @@
 #!/bin/bash -i
-# Version 1.2.6
+# Version 1.2.0
 trap 'kill ${GETMESSAGES_PID}; exit 0;' INT QUIT
 GLOBIGNORE="*"
 
-VERSION="1.2.6"
+VERSION="1.2.0"
 
 # The following code is for processing arguments to the script
 while getopts ":p:" OPTION
