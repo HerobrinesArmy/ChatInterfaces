@@ -3,6 +3,9 @@ Please do not modify the script in this repo directly, fork it instead. Basicall
 This script is designed to post in the Herobrine's Army chat room. Typing plain text into the terminal will just send a message.
 You can now safely use ctrl + c to exit (though the /exit command is still the best way, because it is tradition).
 
+Arguments
+-p <proxy>                        #This sets a proxy, you want to specify it in the form <protocol>://<addresss>:<port>
+
 Commands:
 
 /wolf                             #This posts a single randomly selected wolf

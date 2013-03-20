@@ -1,16 +1,32 @@
 #!/bin/bash -i
-# Version 1.1.6
+# Version 1.2.6
 trap 'kill ${GETMESSAGES_PID}; exit 0;' INT QUIT
 GLOBIGNORE="*"
 
-VERSION="1.1.6"
+VERSION="1.2.6"
 
+# The following code is for processing arguments to the script
+while getopts ":p:" OPTION
+    do
+        case $OPTION in
+            p)
+                PROXY="-x $OPTARG"
+                ;;
+            \?)
+                echo "Invalid option: -$OPTARG"
+                exit 1
+                ;;
+            :)
+                echo "-$OPTARG requires an argument."
+                exit 1
+        esac
+    done
 # The postMessage function takes a single argument of the data you would like to post, and urlencodes and posts it
 postMessage ()
 {
     local ENCODED_MESSAGE=$( urlEncode "$1" )
     auth
-    curl -m 60 -L -b cookie -c cookie "http://herobrinesarmy.com/post_chat.php?c=${CHAT_ROOM}&o=1&m=${ENCODED_MESSAGE}" >/dev/null 2>&1
+    curl $PROXY -m 60 -L -b cookie -c cookie "http://herobrinesarmy.com/post_chat.php?c=${CHAT_ROOM}&o=1&m=${ENCODED_MESSAGE}" >/dev/null 2>&1
 }
 
 # The getMessages function is for getting messages. It replaces the getmessages.sh script.
@@ -19,7 +35,7 @@ getMessages ()
     LMID="0"
     while :
         do
-            local JSON_INPUT=$( curl -m 60 -s -L -b cookie -c cookie "http://herobrinesarmy.com/update_chat2.php?c=${1}&l=${LMID}&p=0" )
+            local JSON_INPUT=$( curl $PROXY -m 60 -s -L -b cookie -c cookie "http://herobrinesarmy.com/update_chat2.php?c=${1}&l=${LMID}&p=0" )
             if [ -n "$JSON_INPUT" ]
                 then
                 LMID=$( echo $JSON_INPUT | sed "s/,/\\`echo -e '\n\r'`/g" | grep '"lmid":"' | cut -d '"' -f 4 )
@@ -46,18 +62,18 @@ urlEncode ()
 # The auth function checks if you are authed, and if you are not, it authenticates you with the server
 auth ()
 {
-    IS_AUTHED=$( curl -s -b cookie -c cookie http://herobrinesarmy.com/amiauth )
+    IS_AUTHED=$( curl $PROXY -s -b cookie -c cookie http://herobrinesarmy.com/amiauth )
     if [ "$IS_AUTHED" = "Nope." ]
         then
             if [ "$HAS_AUTHED" = "1" ]
                 then
-                    curl -b cookie -c cookie -d "user=${USER}&pass=${PASS}" http://herobrinesarmy.com/auth.php
+                    curl $PROXY -b cookie -c cookie -d "user=${USER}&pass=${PASS}" http://herobrinesarmy.com/auth.php
             else
                 echo "Your session has expired, you will need to log in again."
                 read -p "Enter your username: " USER
                 read -s -p "Enter your password: " PASS
                 echo
-                curl -b cookie -c cookie -d "user=${USER}&pass=${PASS}" http://herobrinesarmy.com/auth.php
+                curl $PROXY -b cookie -c cookie -d "user=${USER}&pass=${PASS}" http://herobrinesarmy.com/auth.php
                 HAS_AUTHED="1"
             fi
     fi
@@ -118,8 +134,8 @@ while :
                 if [ $MESSAGE_LENGTH -gt 1 ]
                     then
                     MUTE_ARG1=$( echo $MESSAGE | cut -d' ' -f2- )
-                    MUTE_ID=$( curl -s -L -b cookie -c cookie "http://herobrinesarmy.com/update_chat2.php?c=${CHAT_ROOM}&l=${LMID}" | sed 's/^.\(.*\).$/\1/' | sed "s/,/\\`echo -e '\n\r'`/g"| sed "s/:{/\\`echo -e '\n\r'`/g" | grep '"user":\|"user_id":' | cut -d "{" -f 2 | cut -d "}" -f 2 | sed 's/<[^>]\+>//g' | cut -d '"' -f 4 | sed '/^$/d' | awk '!_[$0]++' | sed '$!N;s/\n/ /' | grep -i "$MUTE_ARG1" | cut -f 1 -d ' ' )
-                    curl -s -b cookie -c cookie "http://herobrinesarmy.com/mute.php?o=1&m=${MUTE_ID}" >/dev/null 2>&1
+                    MUTE_ID=$( curl $PROXY -s -L -b cookie -c cookie "http://herobrinesarmy.com/update_chat2.php?c=${CHAT_ROOM}&l=${LMID}" | sed 's/^.\(.*\).$/\1/' | sed "s/,/\\`echo -e '\n\r'`/g"| sed "s/:{/\\`echo -e '\n\r'`/g" | grep '"user":\|"user_id":' | cut -d "{" -f 2 | cut -d "}" -f 2 | sed 's/<[^>]\+>//g' | cut -d '"' -f 4 | sed '/^$/d' | awk '!_[$0]++' | sed '$!N;s/\n/ /' | grep -i "$MUTE_ARG1" | cut -f 1 -d ' ' )
+                    curl $PROXY -s -b cookie -c cookie "http://herobrinesarmy.com/mute.php?o=1&m=${MUTE_ID}" >/dev/null 2>&1
                     else
                     echo "You need to enter your target."
                 fi
@@ -129,8 +145,8 @@ while :
                 if [ $MESSAGE_LENGTH -gt 1 ]
                     then
                     UNMUTE_ARG1=$( echo $MESSAGE | cut -d' ' -f2- )
-                    UNMUTE_ID=$( curl -s -L -b cookie -c cookie "http://herobrinesarmy.com/update_chat2.php?c=${CHAT_ROOM}&l=${LMID}" | sed 's/^.\(.*\).$/\1/' | sed "s/,/\\`echo -e '\n\r'`/g"| sed "s/:{/\\`echo -e '\n\r'`/g" | grep '"user":\|"user_id":' | cut -d "{" -f 2 | cut -d "}" -f 2 | sed 's/<[^>]\+>//g' | cut -d '"' -f 4 | sed '/^$/d' | awk '!_[$0]++' | sed '$!N;s/\n/ /' | grep -i "$MUTE_ARG1" | cut -f 1 -d ' ' )
-                    curl -s -b cookie -c cookie "http://herobrinesarmy.com/mute.php?o=0&m=${UNMUTE_ID}" >/dev/null 2>&1
+                    UNMUTE_ID=$( curl $PROXY -s -L -b cookie -c cookie "http://herobrinesarmy.com/update_chat2.php?c=${CHAT_ROOM}&l=${LMID}" | sed 's/^.\(.*\).$/\1/' | sed "s/,/\\`echo -e '\n\r'`/g"| sed "s/:{/\\`echo -e '\n\r'`/g" | grep '"user":\|"user_id":' | cut -d "{" -f 2 | cut -d "}" -f 2 | sed 's/<[^>]\+>//g' | cut -d '"' -f 4 | sed '/^$/d' | awk '!_[$0]++' | sed '$!N;s/\n/ /' | grep -i "$MUTE_ARG1" | cut -f 1 -d ' ' )
+                    curl $PROXY -s -b cookie -c cookie "http://herobrinesarmy.com/mute.php?o=0&m=${UNMUTE_ID}" >/dev/null 2>&1
                     else
                     echo "You need to enter your target."
                 fi
@@ -140,14 +156,14 @@ while :
                 if [ $MESSAGE_LENGTH -gt 1 ]
                     then
                     PROFILE_ARG1=$( echo $MESSAGE | cut -d' ' -f2- )
-                    PROFILE=$( curl -s -L -b cookie -c cookie "http://herobrinesarmy.com/update_chat2.php?c=${CHAT_ROOM}&l=${LMID}" | sed 's/^.\(.*\).$/\1/' | sed "s/,/\\`echo -e '\n\r'`/g"| sed "s/:{/\\`echo -e '\n\r'`/g" | grep '"user":\|"user_id":' | cut -d "{" -f 2 | cut -d "}" -f 2 | sed 's/<[^>]\+>//g' | cut -d '"' -f 4 | sed '/^$/d' | awk '!_[$0]++' | sed '$!N;s/\n/ /' | grep -i "$PROFILE_ARG1" | cut -f 1 -d ' ' )
+                    PROFILE=$( curl $PROXY -s -L -b cookie -c cookie "http://herobrinesarmy.com/update_chat2.php?c=${CHAT_ROOM}&l=${LMID}" | sed 's/^.\(.*\).$/\1/' | sed "s/,/\\`echo -e '\n\r'`/g"| sed "s/:{/\\`echo -e '\n\r'`/g" | grep '"user":\|"user_id":' | cut -d "{" -f 2 | cut -d "}" -f 2 | sed 's/<[^>]\+>//g' | cut -d '"' -f 4 | sed '/^$/d' | awk '!_[$0]++' | sed '$!N;s/\n/ /' | grep -i "$PROFILE_ARG1" | cut -f 1 -d ' ' )
                     echo "http://herobrinesarmy.enjin.com/profile/${PROFILE}"
                     else
                     echo "You must enter a name."
                 fi
                 ;;
             /users)
-                USERS_ARG=$( curl -s -b cookie -c cookie "http://herobrinesarmy.com/update_chat2.php?c=${CHAT_ROOM}&l=${LMID}" | sed 's/^.\(.*\).$/\1/' | sed s/'.*"users":'/''/ | sed "s/,/\\`echo -e '\n\r'`/g"| sed "s/:{/\\`echo -e '\n\r'`/g" | grep '"user":' | cut -d "{" -f 2 | cut -d "}" -f 2 | sed 's/<[^>]\+>//g' | cut -d '"' -f 4 | sed '/^$/d' )
+                USERS_ARG=$( curl $PROXY -s -b cookie -c cookie "http://herobrinesarmy.com/update_chat2.php?c=${CHAT_ROOM}&l=${LMID}" | sed 's/^.\(.*\).$/\1/' | sed s/'.*"users":'/''/ | sed "s/,/\\`echo -e '\n\r'`/g"| sed "s/:{/\\`echo -e '\n\r'`/g" | grep '"user":' | cut -d "{" -f 2 | cut -d "}" -f 2 | sed 's/<[^>]\+>//g' | cut -d '"' -f 4 | sed '/^$/d' )
                 echo -e "\033[1;31m${USERS_ARG}\033[0m"
                 ;;
             /hug*)
@@ -176,12 +192,12 @@ while :
                     PASTE_FILENAME=$( echo $MESSAGE | cut -d' ' -f2- )
                     PASTE_CONTENT=$( cat "$PASTE_FILENAME" )
                     PASTE_ENCODED=$( urlEncode "$PASTE_CONTENT" )
-                    PASTEBIN_LINK=$( curl -s -d "api_dev_key=${PASTEBIN_DEV_KEY}" -d "api_option=paste" -d "api_paste_code=${PASTE_ENCODED}" "http://pastebin.com/api/api_post.php" )
+                    PASTEBIN_LINK=$( curl $PROXY -s -d "api_dev_key=${PASTEBIN_DEV_KEY}" -d "api_option=paste" -d "api_paste_code=${PASTE_ENCODED}" "http://pastebin.com/api/api_post.php" )
                     postMessage "$PASTEBIN_LINK"
                     else
                     PASTE_CONTENT=$( xclip -o -selection clip-board )
                     PASTE_ENCODED=$( urlEncode "$PASTE_CONTENT" )
-                    PASTEBIN_LINK=$( curl -s -d "api_dev_key=${PASTEBIN_DEV_KEY}" -d "api_option=paste" -d "api_paste_code=${PASTE_ENCODED}" "http://pastebin.com/api/api_post.php" )
+                    PASTEBIN_LINK=$( curl $PROXY -s -d "api_dev_key=${PASTEBIN_DEV_KEY}" -d "api_option=paste" -d "api_paste_code=${PASTE_ENCODED}" "http://pastebin.com/api/api_post.php" )
                     postMessage "$PASTEBIN_LINK" &
                 fi
                 ;;
