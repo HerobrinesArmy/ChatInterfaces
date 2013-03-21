@@ -1,16 +1,20 @@
 #!/bin/bash -i
-# Version 1.2.0
+# Version 1.2.1
 trap 'kill ${GETMESSAGES_PID}; exit 0;' INT QUIT
 GLOBIGNORE="*"
 
-VERSION="1.2.0"
+VERSION="1.2.1"
 
 # The following code is for processing arguments to the script
-while getopts ":p:" OPTION
+while getopts ":p:l:" OPTION
     do
         case $OPTION in
             p)
                 PROXY="-x $OPTARG"
+                ;;
+            l)
+                LOGFILE="$OPTARG"
+                echo "==================NEW LOG SESSION STARTING==================="
                 ;;
             \?)
                 echo "Invalid option: -$OPTARG"
@@ -47,7 +51,11 @@ getMessages ()
                         then
                             echo -e "\r\033[K$INCOMING_MESSAGE"
                             LMID_PREVIOUS="$LMID"
-            fi
+                                if [ -n "$LOGFILE" ]
+                                    then
+                                        echo -e "$INCOMING_MESSAGE" >> $LOGFILE
+                                fi
+                    fi
             fi
         done
 }

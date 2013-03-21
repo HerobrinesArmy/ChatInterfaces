@@ -5,7 +5,8 @@ You can now safely use ctrl + c to exit (though the /exit command is still the b
 
 Arguments
 -p <proxy>                        #This sets a proxy, you want to specify it in the form <protocol>://<addresss>:<port>
-
+-l <logfile>                      #This logs all chat messages to the specified logfile. It appends to the file, not overwriting previous data
+                                  #To view the logs, use less -r <logfile>, that way you get pretty colors
 Commands:
 
 /wolf                             #This posts a single randomly selected wolf
