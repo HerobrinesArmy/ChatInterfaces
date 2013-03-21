@@ -1,30 +1,9 @@
 #!/bin/bash -i
-# Version 1.2.1
+# Version 1.2.2
 trap 'kill ${GETMESSAGES_PID}; exit 0;' INT QUIT
 GLOBIGNORE="*"
+VERSION="1.2.2"
 
-VERSION="1.2.1"
-
-# The following code is for processing arguments to the script
-while getopts ":p:l:" OPTION
-    do
-        case $OPTION in
-            p)
-                PROXY="-x $OPTARG"
-                ;;
-            l)
-                LOGFILE="$OPTARG"
-                echo "==================NEW LOG SESSION STARTING==================="
-                ;;
-            \?)
-                echo "Invalid option: -$OPTARG"
-                exit 1
-                ;;
-            :)
-                echo "-$OPTARG requires an argument."
-                exit 1
-        esac
-    done
 # The postMessage function takes a single argument of the data you would like to post, and urlencodes and posts it
 postMessage ()
 {
@@ -40,6 +19,11 @@ getMessages ()
     while :
         do
             local JSON_INPUT=$( curl $PROXY -m 60 -s -L -b cookie -c cookie "http://herobrinesarmy.com/update_chat2.php?c=${1}&l=${LMID}&p=0" )
+            if [ -n "$DUMP_JSON" ]
+                then
+                echo "$JSON_INPUT" > $DUMP_JSON
+                break
+            fi
             if [ -n "$JSON_INPUT" ]
                 then
                 LMID=$( echo $JSON_INPUT | sed "s/,/\\`echo -e '\n\r'`/g" | grep '"lmid":"' | cut -d '"' -f 4 )
@@ -86,6 +70,35 @@ auth ()
             fi
     fi
 }
+
+# The following code is for processing arguments to the script
+while getopts ":p:l:j:" OPTION
+    do
+        case $OPTION in
+            p)
+                PROXY="-x $OPTARG"
+                ;;
+            l)
+                LOGFILE="$OPTARG"
+                echo "==================NEW LOG SESSION STARTING===================" >> $LOGFILE
+                ;;
+            j)
+                DUMP_JSON="$OPTARG"
+                auth
+                echo "The main chats are 8613406 (main chat) and 3 (science chat)."
+                read -e -p "Enter the chat room number you wish to join: " -i "8613406" CHAT_ROOM
+                getMessages $CHAT_ROOM
+                exit 0
+                ;;
+            \?)
+                echo "Invalid option: -$OPTARG"
+                exit 1
+                ;;
+            :)
+                echo "-$OPTARG requires an argument."
+                exit 1
+        esac
+    done
 
 PASTEBIN_DEV_KEY="172ab6f8293eaa46c3d527975b9a1813"
 
