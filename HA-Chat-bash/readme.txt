@@ -16,7 +16,7 @@ Commands:
 /wolf previous                    #This tells you the number of the last wolf you posted
 /cmd <command goes here>          #This runs console commands from within the chat client
 /no                               #This posts a large NO in chat, good for telling people they have bad ideas
-/ping                             #This pings herobrinesarmy.com and can return either "PONG!" or "FAILURE!"
+/ping                             #This pings herobrinesarmy.com and gives you the time in miliseconds
 /logout                           #This logs you out and exits
 /exit                             #This exits the program making no attempt to log you out.
 /mute <username>                  #This mutes the user with the name <username>
@@ -26,3 +26,4 @@ Commands:
 /pastebin <file>                  #This posts a file to pastebin and posts a link in chat
 /version                          #This displays the current version number of the script
 /profile <username>               #This gives a link to someone's profile on enjin
+/hug <username>                   #This gives the specified person a hug
