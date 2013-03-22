@@ -1,8 +1,8 @@
 #!/bin/bash -i
-# Version 1.2.2
+# Version 1.2.3
 trap 'kill ${GETMESSAGES_PID}; exit 0;' INT QUIT
 GLOBIGNORE="*"
-VERSION="1.2.2"
+VERSION="1.2.3"
 
 # The postMessage function takes a single argument of the data you would like to post, and urlencodes and posts it
 postMessage ()
@@ -54,7 +54,7 @@ urlEncode ()
 # The auth function checks if you are authed, and if you are not, it authenticates you with the server
 auth ()
 {
-    IS_AUTHED=$( curl $PROXY -s -b cookie -c cookie http://herobrinesarmy.com/amiauth )
+    IS_AUTHED=$( curl $PROXY -m 60 -s -b cookie -c cookie http://herobrinesarmy.com/amiauth )
     if [ "$IS_AUTHED" = "Nope." ]
         then
             if [ "$HAS_AUTHED" = "1" ]
