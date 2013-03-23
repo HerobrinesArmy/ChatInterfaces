@@ -136,7 +136,7 @@ def parse(output, msg)
     end
 end
 
-update = Thread.new do
+Thread.new do
     users = {}
     messages = []
     lmid = 0
