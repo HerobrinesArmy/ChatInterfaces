@@ -33,7 +33,7 @@ RubyChat (awesome271828)
 =====================
 
 You need Ruby 2.0 or above on Linux to run it. I can't guarantee it will work under any other circumstances.
-`./main.rb` or `ruby main.rb` will launch it. A 32-bit pre-compiled package has been provided for you convenience.
+`./main.rb` or `ruby main.rb` will launch it. A 32-bit pre-compiled package has been provided for your convenience.
 Install it with `sudo dpkg -i ruby-2.0.0-p0-1_i386.deb`.
 
 The window will auto-fit itself to your initial terminal size. If the terminal is too small, an error will be thrown.
