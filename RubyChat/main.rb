@@ -123,10 +123,12 @@ main_win.refresh
 
 def parse(output, msg)
     op = false
-    case msg[1]
-    when 'Inception horn'
+    if msg[1] == 'Inception horn'
         Curses.flash
         op = true
+    elsif msg[1].start_with?('/me ')
+        put_bold(output, "#{msg[0]} ")
+        output.addstr("#{msg[1].sub('/me ', '')}\n")
     else
         op = true
     end
@@ -142,24 +144,17 @@ Thread.new do
     lmid = 0
     loop do
         m = ChatInterfaces::Network.get_messages(r, cookie, lmid)
+        lmid = m['lmid'].to_i
         error('Failed to download messages!') unless m
         m['users'].each_value { |val| users[val['user_id']] = extract_username(val['user']) }
         m['messages'].each_value { |val| messages << [extract_username(val['user']), val['message']] } if m['messages']
-        if lmid.zero?
-            messages.each do |msg|
-                put_bold(chat_display, "#{msg[0]}: ")
-                chat_display.addstr("#{msg[1]}\n")
-            end
-        else
-            messages.each { |msg| parse(chat_display, msg) }
-        end
+        messages.each { |msg| parse(chat_display, msg) }
         chat_display.refresh
         user_display.setpos(user_display.begy, user_display.begx)
         user_display.clear
         users.each_value { |val| user_display.addstr("#{val}\n") }
         user_display.refresh
         messages = []
-        lmid = m['lmid'].to_i
         sleep(1)
     end
 end
