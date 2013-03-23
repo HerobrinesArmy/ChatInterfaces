@@ -1,3 +1,5 @@
+# By awesome271828.
+
 require 'net/http'
 require 'json'
 

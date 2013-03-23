@@ -28,3 +28,18 @@ Commands:
 ## v1.0
 * Receives chat message and is able to post to chat
 * Requires to be run with a terminal passing username and password as arguments
+
+RubyChat (awesome271828)
+=====================
+
+You need Ruby 2.0 or above on Linux to run it. I can't guarantee it will work under any other circumstances.
+`./main.rb` or `ruby main.rb` will launch it.
+
+The window will auto-fit itself to your initial terminal size. If the terminal is too small, an error will be thrown.
+After you've launched it, do not resize your terminal; bad things will happen.
+
+Right now, the supported commands are
+* /wolf
+* /logout
+
+More will be added soon.

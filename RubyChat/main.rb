@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# By awesome271828.
 
 begin
 
