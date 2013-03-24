@@ -53,6 +53,10 @@ def init
     main_win = Curses.stdscr
     $width = main_win.maxx
     $height = main_win.maxy
+    $users = {}
+    $muted = Hash.new(false)
+    $user_access = Mutex.new
+    $screenctl = Mutex.new
 
     u_box = main_win.subwin(3, 42, center_y(3) - 2, center_x(42))
     u_box.box(0, 0)
@@ -129,7 +133,7 @@ def parse(output, msg)
         Curses.flash
         op = true
     elsif msg[1].start_with?('/me ')
-        put_bold(output, "#{msg[0]} ")
+        put_bold(output, "*#{msg[0]} ")
         output.addstr("#{msg[1].sub('/me ', '')}\n")
     else
         op = true
@@ -148,30 +152,70 @@ Thread.new do
         m = ChatInterfaces::Network.get_messages(r, cookie, lmid)
         lmid = m['lmid'].to_i
         error('Failed to download messages!') unless m
-        m['users'].each_value { |val| users[val['user_id']] = extract_username(val['user']) }
-        m['messages'].each_value { |val| messages << [extract_username(val['user']), val['message']] } if m['messages']
-        messages.each { |msg| parse(chat_display, msg) }
-        chat_display.refresh
-        user_display.setpos(user_display.begy, user_display.begx)
-        user_display.clear
-        users.each_value { |val| user_display.addstr("#{val}\n") }
-        user_display.refresh
-        users = {}
-        messages = []
+        $user_access.synchronize do
+            $users = {}
+            messages = []
+            m['users'].each_value { |val| $users[val['user_id']] = extract_username(val['user']) }
+            m['messages'].each_value { |val| messages << [extract_username(val['user']), val['message']] } if m['messages']
+            $screenctl.synchronize do
+                messages.each { |msg| parse(chat_display, msg) unless $muted[msg[0]] }
+                chat_display.refresh
+                user_display.setpos(user_display.begy, user_display.begx)
+                user_display.clear
+                $users.each_value do |val|
+                    user_display.standout if $muted[val]
+                    user_display.addstr("#{val}\n")
+                    user_display.standend
+                end
+                user_display.refresh
+            end
+        end
         sleep(1)
     end
 end
 
-def process(msg, room, cookie)
-    case cf(msg)
-    when '/wolf'
+def process(msg, room, cookie, output)
+    c = cf(msg)
+   if c == '/wolf'
         $wolflist ||= Net::HTTP.get_response(URI(WOLF)).body.split("\n")
         msg = "[img]#{$wolflist[Random.rand($wolflist.size)]}[/img]"
-    when '/logout'
+    elsif c == '/logout'
         ChatInterfaces::Network.logout(cookie)
         Curses.close_screen
         puts 'Logged out.'
         exit
+    elsif msg.downcase.start_with?('/mute ')
+        msg.sub!(/\A\/mute /i, '').rstrip!
+        $user_access.synchronize do
+            $screenctl.synchronize do
+                if $muted[msg]
+                    put_bold(output, "User #{msg} has already been muted.\n")
+                elsif $users.has_value?(msg)
+                    $muted[msg] = true
+                    put_bold(output, msg)
+                    output.addstr(" has been muted.\n")
+                else
+                    put_bold(output, "User \"#{msg}\" not found.\n")
+                end
+            end
+        end
+        msg = ''
+    elsif msg.downcase.start_with?('/unmute ')
+        msg.sub!(/\A\/unmute /i, '').rstrip!
+        $user_access.synchronize do
+            $screenctl.synchronize do
+                if !$muted[msg]
+                    put_bold(output, "User #{msg} is not muted.\n")
+                elsif $users.has_value?(msg)
+                    $muted[msg] = false
+                    put_bold(output, msg)
+                    output.addstr(" has been unmuted.\n")
+                else
+                    put_bold(output, "User \"#{msg}\" not found.\n")
+                end
+            end
+        end
+        msg = ''
     end
     ChatInterfaces::Network.send_message(msg, room, cookie) unless msg.empty?
 end
@@ -179,7 +223,7 @@ end
 loop do
     main_win.setpos($height - 1, 0)
     main_win.clrtoeol
-    process(main_win.getstr, r, cookie)
+    process(main_win.getstr, r, cookie, chat_display)
 end
 
 rescue => e
