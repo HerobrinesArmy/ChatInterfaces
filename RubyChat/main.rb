@@ -3,7 +3,7 @@
 
 begin
 
-require File.dirname(__FILE__) + '/lib/network.rb'
+require File.dirname(File.expand_path(__FILE__)) + '/lib/network.rb'
 require 'curses'
 require 'thread'
 
