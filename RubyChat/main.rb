@@ -156,6 +156,7 @@ Thread.new do
         user_display.clear
         users.each_value { |val| user_display.addstr("#{val}\n") }
         user_display.refresh
+        users = {}
         messages = []
         sleep(1)
     end
