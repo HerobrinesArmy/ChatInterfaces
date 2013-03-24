@@ -174,8 +174,8 @@ Thread.new do
 end
 
 def process(msg, room, cookie, output)
-   c = cf(msg)
-   if c == '/wolf'
+    c = cf(msg)
+    if c == '/wolf'
         $wolflist ||= Net::HTTP.get_response(URI(WOLF)).body.split("\n")
         msg = "[img]#{$wolflist[Random.rand($wolflist.size)]}[/img]"
     elsif c == '/logout'
