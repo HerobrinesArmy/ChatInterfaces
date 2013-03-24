@@ -145,7 +145,6 @@ def parse(output, msg)
 end
 
 Thread.new do
-    users = {}
     messages = []
     lmid = 0
     loop do
@@ -175,7 +174,7 @@ Thread.new do
 end
 
 def process(msg, room, cookie, output)
-    c = cf(msg)
+   c = cf(msg)
    if c == '/wolf'
         $wolflist ||= Net::HTTP.get_response(URI(WOLF)).body.split("\n")
         msg = "[img]#{$wolflist[Random.rand($wolflist.size)]}[/img]"
