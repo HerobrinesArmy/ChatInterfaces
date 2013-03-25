@@ -17,7 +17,6 @@ Commands:
 /cmd <command goes here>          #This runs console commands from within the chat client
 /no                               #This posts a large NO in chat, good for telling people they have bad ideas
 /ping                             #This pings herobrinesarmy.com and gives you the time in miliseconds
-/logout                           #This logs you out and exits
 /exit                             #This exits the program making no attempt to log you out.
 /mute <username>                  #This mutes the user with the name <username>
 /users                            #This shows you a list of currently online users
