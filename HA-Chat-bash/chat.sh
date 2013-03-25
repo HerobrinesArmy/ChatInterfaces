@@ -1,8 +1,8 @@
 #!/bin/bash -i
-# Version 1.2.4
-trap 'kill ${GETMESSAGES_PID}; rm cookie; exit 0;' INT QUIT
+# Version 1.2.5
+trap 'kill ${GETMESSAGES_PID} >/dev/null 2>&1; rm cookie >/dev/null 2>&1; exit 0;' INT QUIT
 GLOBIGNORE="*"
-VERSION="1.2.4"
+VERSION="1.2.5"
 
 # The postMessage function takes a single argument of the data you would like to post, and urlencodes and posts it
 postMessage ()
@@ -102,7 +102,7 @@ while getopts ":p:l:j:" OPTION
 
 PASTEBIN_DEV_KEY="172ab6f8293eaa46c3d527975b9a1813"
 
-rm cookie
+rm cookie >/dev/null 2>&1
 auth
 echo "The main chats are 8613406 (main chat) and 3 (science chat)."
 read -e -p "Enter the chat room number you wish to join: " -i "8613406" CHAT_ROOM
@@ -243,8 +243,8 @@ while :
                 ping -c1 herobrinesarmy.com | grep rtt | cut -d'/' -f5
                 ;;
             /ex*)
-                kill $GETMESSAGES_PID
-                rm cookie
+                kill $GETMESSAGES_PID >/dev/null 2>&1
+                rm cookie >/dev/null 2>&1
                 exit 0
                 ;;
             *)
