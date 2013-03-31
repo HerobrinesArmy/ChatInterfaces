@@ -177,12 +177,14 @@ def process(msg, room, cookie, output)
     c = cf(msg)
     if c == '/wolf'
         $wolflist ||= Net::HTTP.get_response(URI(WOLF)).body.split("\n")
-        msg = "[img]#{$wolflist[Random.rand($wolflist.size)]}[/img]"
+        msg = "[img]#{$wolflist.sample}[/img]"
     elsif c == '/logout'
         ChatInterfaces::Network.logout(cookie)
         Curses.close_screen
         puts 'Logged out.'
         exit
+    elsif msg.downcase.start_with?('/t ')
+        msg = msg.sub(/\A\/t /i, '').downcase.gsub(/[^a-z\d]+/, '').prepend('#')
     elsif msg.downcase.start_with?('/mute ')
         msg.sub!(/\A\/mute /i, '').rstrip!
         $user_access.synchronize do

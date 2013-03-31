@@ -12,8 +12,8 @@ module ChatInterfaces
         POST = 'post_chat.php'
         MESSAGES = 'update_chat2.php'
         class << self 
-            def fetch(url, params: {}, headers: {}, get: true) # I don't think we need to follow redirections.
-                uri = URI(url)                                 # That functionality can be added later if needed.
+            def fetch(url, params: {}, headers: {}, get: true)
+                uri = URI(url)
                 Net::HTTP.start(uri.host, uri.port) do |connection|
                     if get
                         uri.query = URI.encode_www_form(params)
