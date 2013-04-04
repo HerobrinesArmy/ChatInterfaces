@@ -49,6 +49,7 @@ def init
     Curses.nocbreak
     Curses.nl
     Curses.echo
+    Thread.abort_on_exception = true
     srand
     main_win = Curses.stdscr
     $width = main_win.maxx
