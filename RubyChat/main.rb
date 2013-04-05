@@ -31,9 +31,7 @@ def center_y(height)
 end
 
 def put_bold(win, text)    
-    win.attrset(Curses::A_BOLD)
-    win.addstr(text)
-    win.attrset(Curses::A_NORMAL)
+    win.attron(Curses::A_BOLD) { win.addstr(text) }
 end
 
 def cf(text) # canonical form
