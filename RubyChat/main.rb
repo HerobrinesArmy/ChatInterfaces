@@ -56,6 +56,7 @@ def init
     $muted = Hash.new(false)
     $user_access = Mutex.new
     $screenctl = Mutex.new
+    $message_queue = Queue.new
 
     u_box = main_win.subwin(3, 42, center_y(3) - 2, center_x(42))
     u_box.box(0, 0)
@@ -220,10 +221,17 @@ def process(msg, room, cookie, output)
     ChatInterfaces::Network.send_message(msg, room, cookie) unless msg.empty?
 end
 
+Thread.new do
+    loop do
+        process(*($message_queue.pop))
+        sleep(2)
+    end
+end
+
 loop do
     main_win.setpos($height - 1, 0)
     main_win.clrtoeol
-    process(main_win.getstr, r, cookie, chat_display)
+    $message_queue << [main_win.getstr, r, cookie, chat_display]
 end
 
 rescue => e
