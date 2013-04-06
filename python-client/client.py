@@ -5,10 +5,13 @@ import urllib.parse
 import threading
 import readline
 import getpass
+import random
 import socket
 import json
 import time
 import re
+
+#message.[message_id, user, message, time, user_id]
 
 class ChatClient:
     def __init__(self):
@@ -88,7 +91,8 @@ class ChatClient:
             return []
 
     def postmessage(self, text):
-        encoded = urllib.parse.quote(text)
+        encoded = urllib.parse.quote(text.strip()[:512])
+        if encoded == '': return False
         if not self.auth():
             return False
         self.opener.open(self.domain + '/post_chat.php?c=' + self.chatroom +
@@ -100,25 +104,34 @@ class ChatClient:
     def unescape(self, text):
         return self.htmlentre.sub(lambda x:
                 html.entities.entitydefs[x.group(1)], text)
-    
+
+
 if __name__ == '__main__':
-    def printchat(text, user):
-        text = user + ': ' + text
+    def printmid(text):
         buffer = readline.get_line_buffer()
         print('\r' + text + ' ' * min(len(buffer) - len(text) + 4, 79 - len(text))
               + '\n  > ' + buffer, end='')
         readline.redisplay()
 
+    with open('../HA-Chat-bash/wolf.txt', 'r') as f:
+        wolves = [x.strip() for x in f.readlines()]
+    random.shuffle(wolves)
+    nextwolf = 0
+    wolfnum = len(wolves)
     try:
         client = ChatClient()
         client.auth()
-        client.onreceive.append(printchat)
+        client.onreceive.append(lambda text, user: printmid(user + ': ' + text))
         client.startautohandle()
-        time.sleep(1)
         cmd = ''
-        while cmd != 'exit':
+        while cmd not in ['/exit', '/quit']:
             if cmd == '':
                 pass
+            elif cmd.startswith('/wolf'):
+                client.postmessage('[img]' + wolves[nextwolf] + '[/img]')
+                nextwolf = (nextwolf + 1) % wolfnum
+            elif cmd.startswith('/eval '):
+                print(str(eval(cmd[5:]))[:512])
             else:
                 client.postmessage(cmd)
             cmd = input('  > ')
