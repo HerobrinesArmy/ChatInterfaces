@@ -3,6 +3,7 @@ import http.cookiejar
 import html.entities
 import urllib.parse
 import threading
+import readline
 import getpass
 import socket
 import json
