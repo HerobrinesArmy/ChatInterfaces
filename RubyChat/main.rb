@@ -10,9 +10,19 @@ require 'cgi'
 
 MAIN_CHAT = 8613406
 MEETING_ROOM = 3
-USER_MATCH = /<a.+>(?<name>.+)<\/a>/
+USER_MATCH = /<a.+tag-(?<tag>\d+)'>(?<name>.+)<\/a>/
 WOLF = 'https://raw.github.com/HerobrinesArmy/ChatInterfaces/master/HA-Chat-bash/wolf.txt'
-
+RANK_CSS = {
+            '228373' => Curses.color_pair(Curses::COLOR_RED),
+            '228361' => Curses.color_pair(Curses::COLOR_BLUE),
+            '228640' => Curses.color_pair(Curses::COLOR_MAGENTA),
+            '228677' => Curses.color_pair(Curses::COLOR_RED),
+            '232043' => Curses.color_pair(Curses::COLOR_GREEN),
+            '271886' => Curses.color_pair(Curses::COLOR_WHITE),
+            '228080' => Curses.color_pair(Curses::COLOR_YELLOW),
+            '241995' => Curses.color_pair(Curses::COLOR_BLUE),
+            '223534' => Curses.color_pair(Curses::COLOR_RED)
+           }
 
 %w[HUP INT QUIT TERM].each do |sig|
     trap(sig) do |signal|
@@ -30,8 +40,8 @@ def center_y(height)
     ($height - height) / 2
 end
 
-def put_bold(win, text)    
-    win.attron(Curses::A_BOLD) { win.addstr(text) }
+def put_bold(win, text, attrs = 0)
+    win.attron(Curses::A_BOLD | attrs) { win.addstr(text) }
 end
 
 def cf(text) # canonical form
@@ -44,6 +54,12 @@ end
 
 def init
     Curses.init_screen
+    if Curses.has_colors?
+        Curses.start_color
+        Curses.colors.times do |c|
+            Curses.init_pair(c, c, Curses::COLOR_BLACK)
+        end
+    end
     Curses.nocbreak
     Curses.nl
     Curses.echo
@@ -88,7 +104,7 @@ end
 def extract_username(text)
     usr = text.match(USER_MATCH)
     error('Invalid server data received!') unless usr
-    usr[:name]
+    [usr[:name], usr[:tag]]
 end
 
 info = init
@@ -133,13 +149,13 @@ def parse(output, msg)
         Curses.flash
         op = true
     elsif msg[1].start_with?('/me ')
-        put_bold(output, "*#{msg[0]} ")
+        put_bold(output, "*#{msg[0].first} ", RANK_CSS[msg[0].last])
         output.addstr("#{msg[1].sub('/me ', '')}\n")
     else
         op = true
     end
     if op
-        put_bold(output, "#{msg[0]}: ")
+        put_bold(output, "#{msg[0].first}: ", RANK_CSS[msg[0].last])
         output.addstr("#{msg[1]}\n")
     end
 end
@@ -157,14 +173,12 @@ Thread.new do
             m['users'].each_value { |val| $users[val['user_id']] = extract_username(val['user']) }
             m['messages'].each_value { |val| messages << [extract_username(val['user']), val['message']] } if m['messages']
             $screenctl.synchronize do
-                messages.each { |msg| parse(chat_display, msg) unless $muted[msg[0]] }
+                messages.each { |msg| parse(chat_display, msg) unless $muted[msg[0].first] }
                 chat_display.refresh
                 user_display.setpos(user_display.begy, user_display.begx)
                 user_display.clear
                 $users.each_value do |val|
-                    user_display.standout if $muted[val]
-                    user_display.addstr("#{val}\n")
-                    user_display.standend
+                    user_display.attron(RANK_CSS[val.last] | ($muted[val.first] ? Curses::A_STANDOUT : 0)) { user_display.addstr("#{val.first}\n") }
                 end
                 user_display.refresh
             end
@@ -191,7 +205,7 @@ def process(msg, room, cookie, output)
             $screenctl.synchronize do
                 if $muted[msg]
                     put_bold(output, "User #{msg} has already been muted.\n")
-                elsif $users.has_value?(msg)
+                elsif $users.values.map(&:first).include?(msg)
                     $muted[msg] = true
                     put_bold(output, msg)
                     output.addstr(" has been muted.\n")
@@ -207,7 +221,7 @@ def process(msg, room, cookie, output)
             $screenctl.synchronize do
                 if !$muted[msg]
                     put_bold(output, "User #{msg} is not muted.\n")
-                elsif $users.has_value?(msg)
+                elsif $users.values.map(&:first).include?(msg)
                     $muted[msg] = false
                     put_bold(output, msg)
                     output.addstr(" has been unmuted.\n")

@@ -50,7 +50,7 @@ module ChatInterfaces
                 json = fetch(HOST + MESSAGES, params: { 'p' => 0,'c' => room, 'l' => lmid }, headers: { 'Cookie' => cookie }).body
                 return nil if json.empty?
                 json = json[1..-2] if /\(.*\)/.match(json)
-                data = JSON.parse(json)
+                JSON.parse(json) rescue nil
             end
         end
     end
