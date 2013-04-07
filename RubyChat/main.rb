@@ -238,7 +238,7 @@ end
 Thread.new do
     loop do
         process(*($message_queue.pop))
-        sleep(2)
+        sleep(2.5)
     end
 end
 
