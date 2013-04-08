@@ -145,6 +145,7 @@ main_win.refresh
 def parse(output, msg)
     op = false
     msg[1] = CGI.unescapeHTML(msg[1])
+    msg[1].gsub!(/\[\/?(?:img|youtube|url)\]/i, '')
     if msg[1] == 'Inception horn'
         Curses.flash
         op = true
