@@ -149,9 +149,9 @@ def parse(output, msg)
     if msg[1] == 'Inception horn'
         Curses.flash
         op = true
-    elsif msg[1].start_with?('/me ')
+    elsif msg[1].start_with?('/me')
         put_bold(output, "*#{msg[0].first} ", RANK_CSS[msg[0].last])
-        output.addstr("#{msg[1].sub('/me ', '')}\n")
+        output.addstr("#{msg[1].sub(/\/me ?/, '')}\n")
     else
         op = true
     end
