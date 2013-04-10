@@ -50,4 +50,8 @@ Right now, the supported commands are
 * /mute user
 * /unmute user
 
-More will be added soon.
+The wolves are numbered programmer-style (`0` through `num_wolves - 1`). Other clients may have them numbered `1` through `num_wolves`. Keep this in mind.
+
+`/wolf number` will accept negative arguments. /wolf -1 is the last wolf, /wolf -2 is the second to last, and so on.
+
+More commands will be added over time.
