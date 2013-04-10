@@ -40,7 +40,12 @@ The window will auto-fit itself to your initial terminal size. If the terminal i
 After you've launched it, do not resize your terminal; bad things will happen.
 
 Right now, the supported commands are
+* /t Chat message
 * /wolf
+  * /wolf count
+  * /wolf previous
+  * /wolf number
+  * /wolf last (last auto-detected wolf)
 * /logout
 * /mute user
 * /unmute user
