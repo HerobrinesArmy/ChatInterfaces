@@ -26,7 +26,7 @@ getMessages ()
             fi
             if [ -n "$JSON_INPUT" ]
                 then
-                LMID=$( echo $JSON_INPUT | sed "s/,/\\`echo -e '\n\r'`/g" | grep '"lmid":"' | cut -d '"' -f 4 )
+                LMID=$( echo $JSON_INPUT | sed 's/.*"lmid":"\([0-9]*\)",.*/\1/g' )
             fi
             local INCOMING_MESSAGE=$( echo $JSON_INPUT | sed 's/.*"messages":{"[0-9]*":{//g' | sed s/'"users":.*'/''/ | sed 's/<[^>]\+>//g' | sed 's/},"[0-9]*":/\n/g'  | sed 's/.*"user":"\([^"]*\)","message":"\([^"]*\)",.*/\1: \2/g' | sed 's/&amp;/\&/g' | sed 's/&lt;/</g' | sed 's/&gt;/>/g' | sed 's/&quot;/"/g' | sed "s/\]\[/\] \[/g" | sed 's/\\\//\//g' | sed 's/\[img\]\([^\[]*\)\[\/img\]/\1 /Ig' | sed 's/\[youtube\]\([^\[]*\)\[\/youtube\]/\1 /Ig' | sed -e 's/\([^:]*[^:]\)/\\033\[1;34m\1\\033\[0m/1' | sed -e 's/\([^:]*[^:]\): \/me \?/\*\1 /1' )
             if [ -n "$INCOMING_MESSAGE" ]
