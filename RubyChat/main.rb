@@ -13,7 +13,7 @@ MEETING_ROOM = 3
 USER_MATCH = /<a.+tag-(?<tag>\d+)'>(?<name>.+)<\/a>/
 WOLF = 'https://raw.github.com/HerobrinesArmy/ChatInterfaces/master/HA-Chat-bash/wolf.txt'
 RANK_CSS = {
-            '228373' => Curses.color_pair(Curses::COLOR_RED),
+            '228373' => Curses.color_pair(Curses::COLOR_CYAN),
             '228361' => Curses.color_pair(Curses::COLOR_BLUE),
             '228640' => Curses.color_pair(Curses::COLOR_MAGENTA),
             '228677' => Curses.color_pair(Curses::COLOR_RED),
@@ -59,6 +59,24 @@ def init
         Curses.colors.times do |c|
             Curses.init_pair(c, c, Curses::COLOR_BLACK)
         end
+        if Curses.colors >= 18 && Curses.can_change_color?
+            Curses.init_color(Curses::COLOR_CYAN, 831, 416, 0)
+            Curses.init_color(Curses::COLOR_CYAN + 8, 831, 416, 0)
+            Curses.init_color(Curses::COLOR_BLUE, 220, 533, 1000)
+            Curses.init_color(Curses::COLOR_BLUE + 8, 220, 533, 1000)
+            Curses.init_color(Curses::COLOR_MAGENTA, 510, 196, 612)
+            Curses.init_color(Curses::COLOR_MAGENTA + 8, 510, 196, 612)
+            Curses.init_color(16, 867, 141, 137)
+            RANK_CSS['228677'] = Curses.color_pair(16)
+            Curses.init_color(Curses::COLOR_GREEN, 0, 459, 0)
+            Curses.init_color(Curses::COLOR_GREEN + 8, 0, 459, 0)
+            Curses.init_color(17, 651, 651, 651)
+            RANK_CSS['271886'] = Curses.color_pair(17)
+            Curses.init_color(Curses::COLOR_YELLOW, 1000, 1000, 0)
+            Curses.init_color(Curses::COLOR_YELLOW + 8, 1000, 1000, 0)
+            Curses.init_color(Curses::COLOR_RED, 820, 149, 149)
+            Curses.init_color(Curses::COLOR_RED + 8, 820, 149, 149)
+        end
     end
     Curses.nocbreak
     Curses.nl
@@ -71,8 +89,9 @@ def init
     $users = {}
     $muted = Hash.new(false)
     $user_access = Mutex.new
-    $screenctl = Mutex.new
     $message_queue = Queue.new
+    $status_queue = Queue.new
+    $wolflist = Net::HTTP.get_response(URI(WOLF)).body.split("\n")
 
     u_box = main_win.subwin(3, 42, center_y(3) - 2, center_x(42))
     u_box.box(0, 0)
@@ -132,17 +151,19 @@ else
 end
 
 main_win.clear
-user_box = main_win.subwin($height - 1, 22, 0, $width - 22)
+user_box = main_win.subwin($height - 2, 22, 1, $width - 22)
 user_box.box(0, 0)
 user_display = inner_window(main_win, user_box)
 user_display.scrollok(true)
-chat = main_win.subwin($height - 1, $width - 23, 0, 0)
+chat = main_win.subwin($height - 2, $width - 23, 1, 0)
 chat.box(0, 0)
 chat_display = inner_window(main_win, chat)
 chat_display.scrollok(true)
+status = main_win.subwin(1, $width, 0, 0)
+status.attron(Curses::A_BOLD)
 main_win.refresh
 
-def parse(output, msg)
+def parse(output, msg, first_time)
     op = false
     msg[1] = CGI.unescapeHTML(msg[1])
     msg[1].gsub!(/\[\/?(?:img|youtube|url)\]/i, '')
@@ -156,6 +177,14 @@ def parse(output, msg)
         op = true
     end
     if op
+        unless $wolflist.nil? || first_time
+            $wolflist.each_with_index do |w, i|
+                if msg[1] == w
+                    $status_queue << "Wolf ##{i} detected."
+                    $auto_wolf = i
+                end
+            end
+        end
         put_bold(output, "#{msg[0].first}: ", RANK_CSS[msg[0].last])
         output.addstr("#{msg[1]}\n")
     end
@@ -163,36 +192,63 @@ end
 
 Thread.new do
     messages = []
+    old_users = {}
     lmid = 0
     loop do
         m = ChatInterfaces::Network.get_messages(r, cookie, lmid)
-        lmid = m['lmid'].to_i
         error('Failed to download messages!') unless m
         $user_access.synchronize do
+            old_users = $users
             $users = {}
             messages = []
-            m['users'].each_value { |val| $users[val['user_id']] = extract_username(val['user']) }
-            m['messages'].each_value { |val| messages << [extract_username(val['user']), val['message']] } if m['messages']
-            $screenctl.synchronize do
-                messages.each { |msg| parse(chat_display, msg) unless $muted[msg[0].first] }
-                chat_display.refresh
-                user_display.setpos(user_display.begy, user_display.begx)
-                user_display.clear
-                $users.each_value do |val|
-                    user_display.attron(RANK_CSS[val.last] | ($muted[val.first] ? Curses::A_STANDOUT : 0)) { user_display.addstr("#{val.first}\n") }
-                end
-                user_display.refresh
+            m['users'].each_value do |val|
+                id = val['user_id']
+                name = extract_username(val['user'])
+                $users[id] = name
+                $status_queue << "#{name.first} has joined." unless old_users.has_key?(id) || old_users.empty?
             end
+            old_users.each { |k, v| $status_queue << "#{v.first} has left." unless $users.has_key?(k) }
+            m['messages'].each { |k, v| messages << [extract_username(v['user']), v['message'], k.to_i] } if m['messages']
+            messages.each { |msg| parse(chat_display, msg, lmid.zero?) unless $muted[msg[0].first] || msg[2] <= lmid }
+            chat_display.refresh
+            user_display.setpos(user_display.begy, user_display.begx)
+            user_display.clear
+            $users.each_value do |val|
+                user_display.attron(RANK_CSS[val.last] | ($muted[val.first] ? Curses::A_STANDOUT : 0)) { user_display.addstr("#{val.first}\n") }
+            end
+            user_display.refresh
         end
+        lmid = m['lmid'].to_i
         sleep(1)
     end
 end
 
-def process(msg, room, cookie, output)
+def process(msg, room, cookie)
     c = cf(msg)
-    if c == '/wolf'
-        $wolflist ||= Net::HTTP.get_response(URI(WOLF)).body.split("\n")
-        msg = "[img]#{$wolflist.sample}[/img]"
+    if c.start_with?('/wolf')
+        c = c.split(' ')[1]
+        case c
+        when nil
+           $prev_wolf = Random.rand($wolflist.size)
+           msg = "[img]#{$wolflist[$prev_wolf]}[/img]"
+        when 'count'
+            $status_queue << "There are #{$wolflist.size} wolves loaded."
+            msg = ''
+        when 'previous'
+            $status_queue << "The last wolf picked was #{$prev_wolf.nil? ? '[none]' : $prev_wolf}."
+            msg = ''
+        when 'last'
+            $status_queue << "The last detected wolf was #{$auto_wolf.nil? ? '[none]' : $auto_wolf}."
+            msg = ''
+        else
+            if a = $wolflist[c.to_i]
+                msg = "[img]#{a}[/img]"
+                $prev_wolf = c.to_i % $wolflist.size
+            else
+                $status_queue << "Invalid command or wolf number entered."
+                msg = ''
+            end
+        end
     elsif c == '/logout'
         ChatInterfaces::Network.logout(cookie)
         Curses.close_screen
@@ -203,36 +259,31 @@ def process(msg, room, cookie, output)
     elsif msg.downcase.start_with?('/mute ')
         msg.sub!(/\A\/mute /i, '').rstrip!
         $user_access.synchronize do
-            $screenctl.synchronize do
-                if $muted[msg]
-                    put_bold(output, "User #{msg} has already been muted.\n")
-                elsif $users.values.map(&:first).include?(msg)
-                    $muted[msg] = true
-                    put_bold(output, msg)
-                    output.addstr(" has been muted.\n")
-                else
-                    put_bold(output, "User \"#{msg}\" not found.\n")
-                end
+            if $muted[msg]
+                $status_queue << "User #{msg} has already been muted."
+            elsif $users.values.map(&:first).include?(msg)
+                $muted[msg] = true
+                $status_queue << "#{msg} has been muted."
+            else
+                $status_queue << "User \"#{msg}\" not found."
             end
         end
         msg = ''
     elsif msg.downcase.start_with?('/unmute ')
         msg.sub!(/\A\/unmute /i, '').rstrip!
         $user_access.synchronize do
-            $screenctl.synchronize do
-                if !$muted[msg]
-                    put_bold(output, "User #{msg} is not muted.\n")
-                elsif $users.values.map(&:first).include?(msg)
-                    $muted[msg] = false
-                    put_bold(output, msg)
-                    output.addstr(" has been unmuted.\n")
-                else
-                    put_bold(output, "User \"#{msg}\" not found.\n")
-                end
+            if !$muted[msg]
+                 $status_queue << "User #{msg} is not muted."
+            elsif $users.values.map(&:first).include?(msg)
+                $muted[msg] = false
+                $status_queue << "#{msg} has been unmuted."
+            else
+                $status_queue << "User \"#{msg}\" not found."
             end
         end
         msg = ''
     end
+    msg = msg.gsub(/(?<!\\)\\n/, "\n").gsub(/\\\\n/, '\n')
     ChatInterfaces::Network.send_message(msg, room, cookie) unless msg.empty?
 end
 
@@ -243,10 +294,21 @@ Thread.new do
     end
 end
 
+Thread.new do
+    loop do
+        status.addstr($status_queue.pop)
+        status.refresh
+        sleep(3)
+        status.setpos(0, 0)
+        status.clear
+        status.refresh
+    end
+end
+
 loop do
     main_win.setpos($height - 1, 0)
     main_win.clrtoeol
-    $message_queue << [main_win.getstr, r, cookie, chat_display]
+    $message_queue << [main_win.getstr, r, cookie]
 end
 
 rescue => e
