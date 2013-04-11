@@ -177,7 +177,7 @@ def parse(output, msg, first_time)
         op = true
     end
     if op
-        unless $wolflist.nil? || first_time
+        unless first_time
             $wolflist.each_with_index do |w, i|
                 if msg[1] == w
                     $status_queue << "Wolf ##{i} detected."
@@ -208,8 +208,8 @@ Thread.new do
                 $status_queue << "#{name.first} has joined." unless old_users.has_key?(id) || old_users.empty?
             end
             old_users.each { |k, v| $status_queue << "#{v.first} has left." unless $users.has_key?(k) }
-            m['messages'].each { |k, v| messages << [extract_username(v['user']), v['message'], k.to_i] } if m['messages']
-            messages.each { |msg| parse(chat_display, msg, lmid.zero?) unless $muted[msg[0].first] || msg[2] <= lmid }
+            m['messages'].sort.each { |info| messages << [extract_username(info.last['user']), info.last['message']] } if m['messages']
+            messages.each { |msg| parse(chat_display, msg, lmid.zero?) unless $muted[msg[0].first] }
             chat_display.refresh
             user_display.setpos(user_display.begy, user_display.begx)
             user_display.clear
