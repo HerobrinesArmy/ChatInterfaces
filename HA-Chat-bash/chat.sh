@@ -1,8 +1,8 @@
 #!/bin/bash -i
-# Version 1.3.3
+# Version 1.3.4
 trap 'kill ${GETMESSAGES_PID} >/dev/null 2>&1; rm cookie >/dev/null 2>&1; exit 0;' INT QUIT
 GLOBIGNORE="*"
-VERSION="1.3.3"
+VERSION="1.3.4"
 
 # The postMessage function takes a single argument of the data you would like to post, and urlencodes and posts it
 postMessage ()
@@ -177,7 +177,7 @@ while :
                 if [ $MESSAGE_LENGTH -gt 1 ]
                     then
                     PROFILE_ARG1=$( echo $MESSAGE | cut -d' ' -f2- )
-                    PROFILE=$( curl $PROXY -s -L -b cookie -c cookie "http://herobrinesarmy.com/update_chat2.php?c=${CHAT_ROOM}&l=${LMID}" | sed 's/^.\(.*\).$/\1/' | sed "s/,/\\`echo -e '\n\r'`/g"| sed "s/:{/\\`echo -e '\n\r'`/g" | grep '"user":\|"user_id":' | cut -d "{" -f 2 | cut -d "}" -f 2 | sed 's/<[^>]\+>//g' | cut -d '"' -f 4 | sed '/^$/d' | awk '!_[$0]++' | sed '$!N;s/\n/ /' | grep -i "$PROFILE_ARG1" | cut -f 1 -d ' ' )
+                    PROFILE=$( curl $PROXY -s -L -b cookie -c cookie "http://herobrinesarmy.com/update_chat2.php?c=${CHAT_ROOM}&l=${LMID}" | sed "s/.*\"user_id\":\"\([0-9]*\)\",\"user\":\".*${PROFILE_ARG1}.*\".*/\1/gI")
                     echo "http://herobrinesarmy.enjin.com/profile/${PROFILE}"
                     else
                     echo "You must enter a name."
