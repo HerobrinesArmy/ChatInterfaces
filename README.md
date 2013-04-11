@@ -50,6 +50,8 @@ Right now, the supported commands are
 * /mute user
 * /unmute user
 
+Typing `\n` anywhere will insert a newline, but typing `\\n` will simply display in chat as "\n".
+
 `/wolf number` will accept non-positive arguments. /wolf 0 is the last wolf, /wolf -1 is the second to last, and so on.
 
 More commands will be added over time.
