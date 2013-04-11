@@ -193,7 +193,9 @@ end
 Thread.new do
     messages = []
     old_users = {}
+    tmp = nil
     lmid = 0
+    lid = 0
     loop do
         m = ChatInterfaces::Network.get_messages(r, cookie, lmid)
         error('Failed to download messages!') unless m
@@ -208,7 +210,10 @@ Thread.new do
                 $status_queue << "#{name.first} has joined." unless old_users.has_key?(id) || old_users.empty?
             end
             old_users.each { |k, v| $status_queue << "#{v.first} has left." unless $users.has_key?(k) }
-            m['messages'].sort.each { |info| messages << [extract_username(info.last['user']), info.last['message']] } if m['messages']
+            if tmp = m['messages']
+                tmp = tmp.sort
+                tmp.each { |info| messages << [extract_username(info.last['user']), info.last['message']] unless info.first.to_i <= lid }
+            end
             messages.each { |msg| parse(chat_display, msg, lmid.zero?) unless $muted[msg[0].first] }
             chat_display.refresh
             user_display.setpos(user_display.begy, user_display.begx)
@@ -219,6 +224,7 @@ Thread.new do
             user_display.refresh
         end
         lmid = m['lmid'].to_i
+        lid = [tmp.last.first.to_i, lid].max if tmp
         sleep(1)
     end
 end
