@@ -314,11 +314,7 @@ end
 loop do
     main_win.setpos($height - 1, 0)
     main_win.clrtoeol
-    msg = ''
-    while (c = main_win.getch) != "\n".ord do
-       msg << c
-    end
-    $message_queue << [msg, r, cookie]
+    $message_queue << [main_win.getstr, r, cookie]
 end
 
 rescue => e
