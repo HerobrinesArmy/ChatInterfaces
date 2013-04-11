@@ -180,7 +180,7 @@ def parse(output, msg, first_time)
         unless first_time
             $wolflist.each_with_index do |w, i|
                 if msg[1] == w
-                    $status_queue << "Wolf ##{i} detected."
+                    $status_queue << "Wolf ##{i.succ} detected."
                     $auto_wolf = i
                 end
             end
@@ -235,15 +235,15 @@ def process(msg, room, cookie)
             $status_queue << "There are #{$wolflist.size} wolves loaded."
             msg = ''
         when 'previous'
-            $status_queue << "The last wolf picked was #{$prev_wolf.nil? ? '[none]' : $prev_wolf}."
+            $status_queue << "The last wolf picked was #{$prev_wolf.nil? ? '[none]' : $prev_wolf.succ}."
             msg = ''
         when 'last'
-            $status_queue << "The last detected wolf was #{$auto_wolf.nil? ? '[none]' : $auto_wolf}."
+            $status_queue << "The last detected wolf was #{$auto_wolf.nil? ? '[none]' : $auto_wolf.succ}."
             msg = ''
         else
-            if a = $wolflist[c.to_i]
+            if a = $wolflist[c.to_i.pred]
                 msg = "[img]#{a}[/img]"
-                $prev_wolf = c.to_i % $wolflist.size
+                $prev_wolf = c.to_i.pred % $wolflist.size
             else
                 $status_queue << "Invalid command or wolf number entered."
                 msg = ''
