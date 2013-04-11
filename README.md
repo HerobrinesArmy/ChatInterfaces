@@ -40,9 +40,18 @@ The window will auto-fit itself to your initial terminal size. If the terminal i
 After you've launched it, do not resize your terminal; bad things will happen.
 
 Right now, the supported commands are
+* /t Chat message
 * /wolf
+  * /wolf count
+  * /wolf previous
+  * /wolf number
+  * /wolf last (last auto-detected wolf)
 * /logout
 * /mute user
 * /unmute user
 
-More will be added soon.
+Typing `\n` anywhere will insert a newline, but typing `\\n` will simply display in chat as "\n".
+
+`/wolf number` will accept non-positive arguments. /wolf 0 is the last wolf, /wolf -1 is the second to last, and so on.
+
+More commands will be added over time.
