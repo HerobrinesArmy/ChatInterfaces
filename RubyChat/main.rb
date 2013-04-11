@@ -318,7 +318,7 @@ loop do
 end
 
 rescue => e
-    $stderr.puts "Error: #{e.class}: #{e.message}"
     Curses.close_screen
+    $stderr.puts "Error: #{e.class}: #{e.message}"
     exit(1)
 end
