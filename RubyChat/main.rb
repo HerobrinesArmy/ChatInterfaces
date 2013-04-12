@@ -7,6 +7,7 @@ require_relative './lib/network.rb'
 require 'curses'
 require 'thread'
 require 'cgi'
+require 'base64'
 
 MAIN_CHAT = 8613406
 MEETING_ROOM = 3
@@ -173,6 +174,9 @@ def parse(output, msg, first_time)
     elsif msg[1].start_with?('/me')
         put_bold(output, "*#{msg[0].first} ", RANK_CSS[msg[0].last])
         output.addstr("#{msg[1].sub(/\/me ?/, '')}\n")
+    elsif msg[1].start_with?('b: ')
+        msg[1] = Base64.decode64(msg[1].sub(/\Ab: /, ''))
+        parse(output, msg, first_time)
     else
         op = true
     end
@@ -288,6 +292,8 @@ def process(msg, room, cookie)
             end
         end
         msg = ''
+    elsif c.start_with?('/b ')
+        msg = "b: #{Base64.encode64(msg.sub(/\A\/b /i, ''))}".chomp
     end
     msg = msg.gsub(/(?<!\\)\\n/, "\n").gsub(/\\\\n/, '\n')
     ChatInterfaces::Network.send_message(msg, room, cookie) unless msg.empty?
