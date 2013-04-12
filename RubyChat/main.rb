@@ -22,7 +22,8 @@ RANK_CSS = {
             '271886' => Curses.color_pair(Curses::COLOR_WHITE),
             '228080' => Curses.color_pair(Curses::COLOR_YELLOW),
             '241995' => Curses.color_pair(Curses::COLOR_BLUE),
-            '223534' => Curses.color_pair(Curses::COLOR_RED)
+            '223534' => Curses.color_pair(Curses::COLOR_RED),
+            '000000' => Curses.color_pair(Curses::COLOR_WHITE)
            }
 
 %w[HUP INT QUIT TERM].each do |sig|
@@ -176,6 +177,7 @@ def parse(output, msg, first_time)
         output.addstr("#{msg[1].sub(/\/me ?/, '')}\n")
     elsif msg[1].start_with?('b: ')
         msg[1] = Base64.decode64(msg[1].sub(/\Ab: /, ''))
+        msg[0][1] = '000000'
         parse(output, msg, first_time)
     else
         op = true
@@ -293,7 +295,7 @@ def process(msg, room, cookie)
         end
         msg = ''
     elsif c.start_with?('/b ')
-        msg = "b: #{Base64.encode64(msg.sub(/\A\/b /i, ''))}".chomp
+        msg = "b: #{Base64.encode64(msg.sub(/\A\/b /i, ''))}".gsub("\n", '')
     end
     msg = msg.gsub(/(?<!\\)\\n/, "\n").gsub(/\\\\n/, '\n')
     ChatInterfaces::Network.send_message(msg, room, cookie) unless msg.empty?
