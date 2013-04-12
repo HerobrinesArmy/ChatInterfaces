@@ -166,7 +166,7 @@ main_win.refresh
 def parse(output, msg, first_time)
     op = false
     msg[1] = CGI.unescapeHTML(msg[1])
-    msg[1].gsub!(/\[\/?(?:img|youtube|url)\]/i, '')
+    msg[1] = msg[1].gsub(/\[(?:img|youtube|url)\]/i, '').gsub(/\[\/(?:img|youtube|url)\]/i, ' ')
     if msg[1] == 'Inception horn'
         Curses.flash
         op = true
@@ -179,7 +179,7 @@ def parse(output, msg, first_time)
     if op
         unless first_time
             $wolflist.each_with_index do |w, i|
-                if msg[1] == w
+                if msg[1].start_with?(w)
                     $status_queue << "Wolf ##{i.succ} detected."
                     $auto_wolf = i
                 end
@@ -236,7 +236,7 @@ def process(msg, room, cookie)
         case c
         when nil
            $prev_wolf = Random.rand($wolflist.size)
-           msg = "[img]#{$wolflist[$prev_wolf]}[/img]"
+           msg = "[img]#{$wolflist[$prev_wolf]}[/img]#{$prev_wolf.succ}"
         when 'count'
             $status_queue << "There are #{$wolflist.size} wolves loaded."
             msg = ''
@@ -248,7 +248,7 @@ def process(msg, room, cookie)
             msg = ''
         else
             if a = $wolflist[c.to_i.pred]
-                msg = "[img]#{a}[/img]"
+                msg = "[img]#{a}[/img]#{(c.to_i.pred % $wolflist.size).succ}"
                 $prev_wolf = c.to_i.pred % $wolflist.size
             else
                 $status_queue << "Invalid command or wolf number entered."
