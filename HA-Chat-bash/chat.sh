@@ -186,7 +186,7 @@ while :
                 fi
                 ;;
             /users)
-                USERS_ARG=$( cat LAST_JSON_INPUT | sed 's/^.\(.*\).$/\1/' | sed s/'.*"users":'/''/ | sed "s/,/\\`echo -e '\n\r'`/g"| sed "s/:{/\\`echo -e '\n\r'`/g" | grep '"user":' | cut -d "{" -f 2 | cut -d "}" -f 2 | sed 's/<[^>]\+>//g' | cut -d '"' -f 4 | sed '/^$/d' )
+                USERS_ARG=$( cat LAST_JSON_INPUT | sed 's/.*"users":{\(.*\)/\1/g' | sed 's/},/},\n/g' | sed 's/.*"user":"\(<[^>]*>\)*\([^<]*\)<[^>]*>[^"]*".*/\2/g' )
                 echo -e "\033[1;31m${USERS_ARG}\033[0m"
                 ;;
             /hug*)
