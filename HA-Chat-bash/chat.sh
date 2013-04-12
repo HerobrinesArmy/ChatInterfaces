@@ -1,8 +1,8 @@
 #!/bin/bash -i
-# Version 1.3.5
+# Version 1.3.6
 trap 'kill ${GETMESSAGES_PID} >/dev/null 2>&1; rm cookie >/dev/null 2>&1; exit 0;' INT QUIT
 GLOBIGNORE="*"
-VERSION="1.3.5"
+VERSION="1.3.6"
 
 # The postMessage function takes a single argument of the data you would like to post, and urlencodes and posts it
 postMessage ()
@@ -28,7 +28,7 @@ getMessages ()
                 then
                 LMID=$( echo $JSON_INPUT | sed 's/.*"lmid":"\([0-9]*\)",.*/\1/g' )
             fi
-            local INCOMING_MESSAGE=$( echo $JSON_INPUT | sed s/'"users":.*'/''/ | sed 's/},/},\n/g' | sed 's/.*"[0-9]*":{"message_id":"[0-9]*","user_id":"[0-9]*","user":"\([^"]*\)","message":"\([^"]*\)".*/\1: \2/g'| sed 's/<[^>]\+>//g' | sed '$d' | sed 's/&amp;/\&/g' | sed 's/&lt;/</g' | sed 's/&gt;/>/g' | sed 's/&quot;/"/g' | sed "s/\]\[/\] \[/g" | sed 's/\\\//\//g' | sed 's/\[img\]\([^\[]*\)\[\/img\]/\1 /Ig' | sed 's/\[youtube\]\([^\[]*\)\[\/youtube\]/\1 /Ig' | sed -e 's/\([^:]*[^:]\)/\\033\[1;34m\1\\033\[0m/1' | sed -e 's/\([^:]*[^:]\): \/me \?/\*\1 /1' | sed 's/\(.\)/\1\x00/g' )
+            local INCOMING_MESSAGE=$( echo $JSON_INPUT | sed s/'"users":.*'/''/ | sed 's/},/},\n/g' | sed 's/.*"[0-9]*":{"message_id":"[0-9]*","user_id":"[0-9]*","user":"\([^"]*\)","message":"\([^"]*\)".*/\1: \2/g' | sed 's/<[^>]\+>//g' | sed '$d' | sed 's/&amp;/\&/g' | sed 's/&lt;/</g' | sed 's/&gt;/>/g' | sed 's/&quot;/"/g' | sed "s/\]\[/\] \[/g" | sed 's/\\\//\//g' | sed 's/\[img\]\([^\[]*\)\[\/img\]/\1 /Ig' | sed 's/\[youtube\]\([^\[]*\)\[\/youtube\]/\1 /Ig' | sed -e 's/\([^:]*[^:]\)/\\033\[1;34m\1\\033\[0m/1' | sed -e 's/\([^:]*[^:]\): \/me \?/\*\1 /1' | sed 's/\(.\)/\1\x00/g' )
             if [ -n "$INCOMING_MESSAGE" ]
                 then
                     if [ "$LMID" != "$LMID_PREVIOUS" ]
@@ -125,7 +125,7 @@ while :
                     then
                         WOLF_NUMBER=$[ ( $RANDOM % $WOLF_LINES ) + 1 ]
                         WOLF_LINK=$( sed -n ${WOLF_NUMBER}p "wolf.txt" )
-                        postMessage "[img]${WOLF_LINK}[/img]" &
+                        postMessage "[img]${WOLF_LINK}[/img]$WOLF_NUMBER" &
                 fi
                 if [[ "$WOLF_ARG1" =~ ^[0-9]+$ ]]
                     then
@@ -133,7 +133,7 @@ while :
                             then
                                 WOLF_NUMBER="$WOLF_ARG1"
                                 WOLF_LINK=$( sed -n ${WOLF_NUMBER}p "wolf.txt" )
-                                postMessage "[img]${WOLF_LINK}[/img]" &
+                                postMessage "[img]${WOLF_LINK}[/img]$WOLF_NUMBER" &
                         fi
                         if [ "$WOLF_ARG1" -gt "$WOLF_LINES" ]
                             then
