@@ -1,8 +1,8 @@
 #!/bin/bash -i
-# Version 1.3.7
+# Version 1.3.8
 trap 'kill ${GETMESSAGES_PID} >/dev/null 2>&1; rm cookie >/dev/null 2>&1; rm LAST_JSON_INPUT >/dev/null 2>&1; exit 0;' INT QUIT
 GLOBIGNORE="*"
-VERSION="1.3.7"
+VERSION="1.3.8"
 
 # The postMessage function takes a single argument of the data you would like to post, and urlencodes and posts it
 postMessage ()
