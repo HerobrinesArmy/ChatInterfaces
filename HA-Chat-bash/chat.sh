@@ -1,8 +1,8 @@
 #!/bin/bash -i
-# Version 1.3.8
+# Version 1.3.9
 trap 'kill ${GETMESSAGES_PID} >/dev/null 2>&1; rm cookie >/dev/null 2>&1; rm LAST_JSON_INPUT >/dev/null 2>&1; exit 0;' INT QUIT
 GLOBIGNORE="*"
-VERSION="1.3.8"
+VERSION="1.3.9"
 
 # The postMessage function takes a single argument of the data you would like to post, and urlencodes and posts it
 postMessage ()
@@ -216,7 +216,7 @@ while :
                     PASTE_CONTENT=$( cat "$PASTE_FILENAME" )
                     PASTE_ENCODED=$( urlEncode "$PASTE_CONTENT" )
                     PASTEBIN_LINK=$( curl $PROXY -s -d "api_dev_key=${PASTEBIN_DEV_KEY}" -d "api_option=paste" -d "api_paste_code=${PASTE_ENCODED}" "http://pastebin.com/api/api_post.php" )
-                    postMessage "$PASTEBIN_LINK"
+                    postMessage "$PASTEBIN_LINK" &
                     else
                     PASTE_CONTENT=$( xclip -o -selection clip-board )
                     PASTE_ENCODED=$( urlEncode "$PASTE_CONTENT" )
