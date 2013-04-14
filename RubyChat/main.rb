@@ -167,11 +167,8 @@ main_win.refresh
 def rot13(str)
     str.chars.map do |c|
         if c.between?(?A, ?z)
-            if c.between?(?A, ?Z)
-                n = (c.ord - ?A.ord + 13).%(26) + ?A.ord
-            else
-                n = (c.ord - ?a.ord + 13).%(26) + ?a.ord
-            end
+            b = c.between?(?A, ?Z) ? ?A.ord : ?a.ord
+            n = (c.ord - b + 13).%(26) + b 
             n.chr
         else
             c
