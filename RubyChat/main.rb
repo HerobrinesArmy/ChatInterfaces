@@ -281,6 +281,13 @@ def process(msg, room, cookie)
         Curses.close_screen
         puts 'Bye!'
         exit
+    elsif msg.downcase.start_with?('/s ')
+        msg.sub!(/\A\/s /i, '')
+        IO.popen(File.dirname(File.expand_path(__FILE__)) + '/lib/chef', 'r+') do |chef|
+            chef.puts msg 
+            chef.close_write
+            msg = chef.gets.chomp + ' Bork Bork Bork!'
+        end
     elsif msg.downcase.start_with?('/t ')
         msg = msg.sub(/\A\/t /i, '').downcase.gsub(/[^a-z\d]+/, '').prepend('#')
     elsif msg.downcase.start_with?('/mute ')
