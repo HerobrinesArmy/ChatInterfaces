@@ -1,8 +1,8 @@
 #!/bin/bash -i
-# Version 1.4.0
+# Version 1.3.9
 trap 'kill ${GETMESSAGES_PID} >/dev/null 2>&1; rm cookie >/dev/null 2>&1; rm LAST_JSON_INPUT >/dev/null 2>&1; exit 0;' INT QUIT
 GLOBIGNORE="*"
-VERSION="1.4.0"
+VERSION="1.3.9"
 
 # The postMessage function takes a single argument of the data you would like to post, and urlencodes and posts it
 postMessage ()
@@ -34,11 +34,7 @@ getMessages ()
                 then
                     if [ "$LMID" != "$LMID_PREVIOUS" ]
                         then
-                            tput sc
-                            tput cuu1
-                            tput kil1
                             echo -e "\r\033[K$INCOMING_MESSAGE"
-                            tput rc
                             LMID_PREVIOUS="$LMID"
                                 if [ -n "$LOGFILE" ]
                                     then
