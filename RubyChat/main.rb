@@ -7,7 +7,6 @@ require_relative './lib/network.rb'
 require 'curses'
 require 'thread'
 require 'cgi'
-require 'base64'
 
 MAIN_CHAT = 8613406
 MEETING_ROOM = 3
@@ -165,6 +164,21 @@ status = main_win.subwin(1, $width, 0, 0)
 status.attron(Curses::A_BOLD)
 main_win.refresh
 
+def rot13(str)
+    str.chars.map do |c|
+        if c.between?(?A, ?z)
+            if c.between?(?A, ?Z)
+                n = (c.ord - ?A.ord + 13).%(26) + ?A.ord
+            else
+                n = (c.ord - ?a.ord + 13).%(26) + ?a.ord
+            end
+            n.chr
+        else
+            c
+        end
+    end.join('')
+end
+
 def parse(output, msg, first_time)
     op = false
     msg[1] = CGI.unescapeHTML(msg[1])
@@ -175,15 +189,15 @@ def parse(output, msg, first_time)
     elsif msg[1].start_with?('/me')
         put_bold(output, "*#{msg[0].first} ", RANK_CSS[msg[0].last])
         output.addstr("#{msg[1].sub(/\/me ?/, '')}\n")
-    elsif msg[1].start_with?('b: ')
-        msg[1] = Base64.decode64(msg[1].sub(/\Ab: /, ''))
+    elsif msg[1].start_with?('r: ')
+        msg[1] = rot13(msg[1].sub(/\Ar: /, ''))
         msg[0][1] = '000000'
         parse(output, msg, first_time)
     else
         op = true
     end
     if op
-        unless first_time
+        unless first_time || $wolflist.nil?
             $wolflist.each_with_index do |w, i|
                 if msg[1].start_with?(w)
                     $status_queue << "Wolf ##{i.succ} detected."
@@ -266,6 +280,10 @@ def process(msg, room, cookie)
         Curses.close_screen
         puts 'Logged out.'
         exit
+    elsif c == '/exit'
+        Curses.close_screen
+        puts 'Bye!'
+        exit
     elsif msg.downcase.start_with?('/t ')
         msg = msg.sub(/\A\/t /i, '').downcase.gsub(/[^a-z\d]+/, '').prepend('#')
     elsif msg.downcase.start_with?('/mute ')
@@ -294,8 +312,8 @@ def process(msg, room, cookie)
             end
         end
         msg = ''
-    elsif c.start_with?('/b ')
-        msg = "b: #{Base64.encode64(msg.sub(/\A\/b /i, ''))}".gsub("\n", '')
+    elsif c.start_with?('/r ')
+        msg = "r: #{rot13(msg.sub(/\A\/r /i, ''))}"
     end
     msg = msg.gsub(/(?<!\\)\\n/, "\n").gsub(/\\\\n/, '\n')
     ChatInterfaces::Network.send_message(msg, room, cookie) unless msg.empty?
