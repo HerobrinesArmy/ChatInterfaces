@@ -32,7 +32,7 @@ Commands:
 RubyChat (awesome271828)
 =====================
 
-You need Ruby 2.0 or above on Linux to run it. It won't work on Windows out-of-the-box, but contact me and I can help you get it set up.
+You need Ruby 2.0 or above on Linux to run it. It won't work on Windows out of the box, but contact me and I can help you get it set up.
 `./main.rb` or `ruby main.rb` will launch it. A 32-bit pre-compiled package has been provided for your convenience.
 Install it with `sudo dpkg -i ruby-2.0.0-p0-1_i386.deb`.
 
