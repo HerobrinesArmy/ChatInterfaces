@@ -180,7 +180,7 @@ def parse(output, msg, first_time)
     op = false
     msg[1] = CGI.unescapeHTML(msg[1])
     msg[1] = msg[1].gsub(/\[(?:img|youtube|url)\]/i, '').gsub(/\[\/(?:img|youtube|url)\]/i, ' ')
-    if msg[1] == 'Inception horn'
+    if msg[1] == 'Inception horn' && !first_time
         Curses.flash
         op = true
     elsif msg[1].start_with?('/me')
@@ -341,6 +341,7 @@ Thread.new do
     end
 end
 
+ChatInterfaces::Network.init
 loop do
     main_win.setpos($height - 1, 0)
     main_win.clrtoeol

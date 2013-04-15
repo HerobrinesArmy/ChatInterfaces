@@ -12,6 +12,8 @@ module ChatInterfaces
         POST = 'post_chat.php'
         MESSAGES = 'update_chat2.php'
         class << self 
+            def init; end
+
             def fetch(url, params: {}, headers: {}, get: true)
                 uri = URI(url)
                 Net::HTTP.start(uri.host, uri.port) do |connection|
