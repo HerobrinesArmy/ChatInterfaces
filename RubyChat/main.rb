@@ -380,7 +380,6 @@ loop do
     c = ''
     while c != "\r" do
         case c
-        when '' 
         when 127.chr
             ptr = [ptr.pred, 0].max
             msg[ptr] = ''
@@ -389,9 +388,11 @@ loop do
                 main_win.delch
             end
         else
-            msg[ptr] = c
-            ptr += 1
-            draw { main_win.addch(c.ord) }
+            unless c.empty?
+                msg[ptr] = c
+                ptr += 1
+                draw { main_win.addch(c.ord) }
+            end
         end
         draw do
             a = main_win.getch
