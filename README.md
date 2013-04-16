@@ -40,9 +40,12 @@ The window will auto-fit itself to your initial terminal size. If the terminal i
 After you've launched it, do not resize your terminal; bad things will happen.
 
 Right now, the supported commands are
-* /t Chat message
-* /r Chat message
-* /s Chat message
+* Message filters:
+    * /t message
+    * /r message
+    * /s message
+    * /v message
+    * /j message
 * /wolf
   * /wolf count
   * /wolf previous
