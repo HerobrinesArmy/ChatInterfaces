@@ -243,8 +243,17 @@ Thread.new do
                 chat_display.refresh
                 user_display.setpos(user_display.begy, user_display.begx)
                 user_display.clear
-                $users.each_value do |val|
-                    user_display.attron(RANK_CSS[val.last] | ($muted[val.first] ? Curses::A_STANDOUT : 0)) { user_display.addstr("#{val.first}\n") }
+                u = $users.to_a.sort do |a, b|
+                    if a[1].last > b[1].last
+                        1
+                    elsif a[1].last < b[1].last
+                        -1
+                    else
+                        a[1].first.downcase <=> b[1].first.downcase
+                    end
+                end
+                u.each do |val|
+                    user_display.attron(RANK_CSS[val[1].last] | ($muted[val[1].first] ? Curses::A_STANDOUT : 0)) { user_display.addstr("#{val[1].first}\n") }
                 end
                 user_display.refresh
             end
@@ -389,15 +398,9 @@ loop do
                 main_win.delch
             end
         else
-            backup = msg[ptr] 
-            begin
-                msg[ptr] = c
-                ptr += 1
-                draw { main_win.addch(c.ord) }
-            rescue ArgumentError => e
-                ptr -= 1
-                msg[ptr] = backup
-            end
+            msg[ptr] = c
+            ptr += 1
+            draw { main_win.addch(c.ord) }
         end
         draw do
             a = main_win.getch
