@@ -389,9 +389,15 @@ loop do
                 main_win.delch
             end
         else
-            msg[ptr] = c
-            ptr += 1
-            draw { main_win.addch(c.ord) }
+            backup = msg[ptr] 
+            begin
+                msg[ptr] = c
+                ptr += 1
+                draw { main_win.addch(c.ord) }
+            rescue ArgumentError => e
+                ptr -= 1
+                msg[ptr] = backup
+            end
         end
         draw do
             a = main_win.getch
