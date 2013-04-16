@@ -395,7 +395,7 @@ loop do
         end
         draw do
             a = main_win.getch
-            c = a.nil? ? '' : a.chr
+            c = a.nil? ? '' : a.chr rescue ''
         end
         sleep(0.01)
     end
