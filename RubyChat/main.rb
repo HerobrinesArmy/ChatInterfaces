@@ -50,6 +50,10 @@ def cf(text) # canonical form
     text.rstrip.downcase
 end
 
+def rc(text, command) # remove command
+    text.sub(/\A\/#{command} /i, '')
+end
+
 def inner_window(mwin, win)
     mwin.subwin(win.maxy - 2, win.maxx - 2, win.begy + 1, win.begx + 1)
 end
@@ -272,8 +276,9 @@ def filter(name, msg)
     end
 end
 
-def process(msg, room, cookie)
+def process(msg, room, cookie, output)
     c = cf(msg)
+    m = msg.downcase
     if c.start_with?('/wolf')
         c = c.split(' ')[1]
         case c
@@ -307,16 +312,35 @@ def process(msg, room, cookie)
         Curses.close_screen
         puts 'Bye!'
         exit
-    elsif msg.downcase.start_with?('/s ')
-        msg = filter('chef', msg.sub(/\A\/s /i, '')) + (Random.rand(10).zero? ? ' Bork Bork Bork!' : '')
-    elsif msg.downcase.start_with?('/j ')
-        msg = filter('jive', msg.sub(/\A\/j /i, ''))
-    elsif msg.downcase.start_with?('/v ')
-        msg = filter('valspeak', msg.sub(/\A\/v /i, ''))
-    elsif msg.downcase.start_with?('/t ')
-        msg = msg.sub(/\A\/t /i, '').downcase.gsub(/[^a-z\d]+/, '').prepend('#')
-    elsif msg.downcase.start_with?('/mute ')
-        msg.sub!(/\A\/mute /i, '').rstrip!
+    elsif m.start_with?('/s ')
+        msg = filter('chef', rc(msg, 's')) + (Random.rand(10).zero? ? ' Bork Bork Bork!' : '')
+    elsif m.start_with?('/j ')
+        msg = filter('jive', rc(msg, 'j'))
+    elsif m.start_with?('/v ')
+        msg = filter('valspeak', rc(msg, 'v'))
+    elsif m.start_with?('/t ')
+        msg = rc(msg, 't').downcase.gsub(/[^a-z\d]+/, '').prepend('#')
+    elsif m.start_with?('/profile ')
+        msg = rc(msg, 'profile')
+        id = ''
+        $users.each do |k, v|
+            if msg == v[0]
+                id = k
+                break
+            end
+        end
+        if id.empty?
+            $status_queue << "User \"#{msg}\" not found."
+        else
+            op = "#{msg}: http://herobrinesarmy.enjin.com/profile/#{id}\n"
+            draw do
+                output.addstr(op)
+                output.refresh
+            end
+        end
+        msg = ''
+    elsif m.start_with?('/mute ')
+        msg = rc(msg, 'mute')
         $user_access.synchronize do
             if $muted[msg]
                 $status_queue << "User #{msg} has already been muted."
@@ -328,8 +352,8 @@ def process(msg, room, cookie)
             end
         end
         msg = ''
-    elsif msg.downcase.start_with?('/unmute ')
-        msg.sub!(/\A\/unmute /i, '').rstrip!
+    elsif m.start_with?('/unmute ')
+        msg = rc(msg, 'unmute')
         $user_access.synchronize do
             if !$muted[msg]
                  $status_queue << "User #{msg} is not muted."
@@ -342,10 +366,12 @@ def process(msg, room, cookie)
         end
         msg = ''
     elsif c.start_with?('/r ')
-        msg = "r: #{rot13(msg.sub(/\A\/r /i, ''))}"
+        msg = "r: #{rot13(rc(msg, 'r'))}"
     end
-    msg = msg.gsub(/(?<!\\)\\n/, "\n").gsub(/\\\\n/, '\n')
-    ChatInterfaces::Network.send_message(msg, room, cookie) unless msg.empty?
+    unless msg.empty?
+        msg = msg.gsub(/(?<!\\)\\n/, "\n").gsub(/\\\\n/, '\n')
+        ChatInterfaces::Network.send_message(msg, room, cookie)
+    end
 end
 
 Thread.new do
@@ -408,7 +434,7 @@ loop do
         end
         sleep(0.01)
     end
-    $message_queue << [msg, r, cookie]
+    $message_queue << [msg, r, cookie, chat_display]
 end
 
 rescue => e
