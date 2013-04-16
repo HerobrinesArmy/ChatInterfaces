@@ -8,6 +8,7 @@ require 'curses'
 require 'thread'
 require 'cgi'
 
+LIB = File.dirname(File.expand_path(__FILE__)) + '/lib/'
 MAIN_CHAT = 8613406
 MEETING_ROOM = 3
 USER_MATCH = /<a.+tag-(?<tag>\d+)'>(?<name>.+)<\/a>/
@@ -92,6 +93,7 @@ def init
     $user_access = Mutex.new
     $message_queue = Queue.new
     $status_queue = Queue.new
+    $draw_queue = Queue.new
     $wolflist = Net::HTTP.get_response(URI(WOLF)).body.split("\n")
 
     u_box = main_win.subwin(3, 42, center_y(3) - 2, center_x(42))
@@ -115,6 +117,10 @@ def init
 end
 
 class ClientError < StandardError; end
+
+def draw(&job)
+    $draw_queue << job
+end
 
 def error(message)
     Curses.close_screen
@@ -231,18 +237,29 @@ Thread.new do
                 tmp = tmp.sort
                 tmp.each { |info| messages << [extract_username(info.last['user']), info.last['message']] unless info.first.to_i <= lid }
             end
-            messages.each { |msg| parse(chat_display, msg, lmid.zero?) unless $muted[msg[0].first] }
-            chat_display.refresh
-            user_display.setpos(user_display.begy, user_display.begx)
-            user_display.clear
-            $users.each_value do |val|
-                user_display.attron(RANK_CSS[val.last] | ($muted[val.first] ? Curses::A_STANDOUT : 0)) { user_display.addstr("#{val.first}\n") }
+            first_time = lmid.zero?
+            draw do
+                messages.each { |msg| parse(chat_display, msg, first_time) unless $muted[msg[0].first] }
+                chat_display.refresh
+                user_display.setpos(user_display.begy, user_display.begx)
+                user_display.clear
+                $users.each_value do |val|
+                    user_display.attron(RANK_CSS[val.last] | ($muted[val.first] ? Curses::A_STANDOUT : 0)) { user_display.addstr("#{val.first}\n") }
+                end
+                user_display.refresh
             end
-            user_display.refresh
         end
         lmid = m['lmid'].to_i
         lid = [tmp.last.first.to_i, lid].max if tmp
         sleep(1)
+    end
+end
+
+def filter(name, msg)
+    IO.popen(LIB + name, 'r+') do |filter|
+        filter.puts msg
+        filter.close_write
+        filter.gets.chomp
     end
 end
 
@@ -282,12 +299,11 @@ def process(msg, room, cookie)
         puts 'Bye!'
         exit
     elsif msg.downcase.start_with?('/s ')
-        msg.sub!(/\A\/s /i, '')
-        IO.popen(File.dirname(File.expand_path(__FILE__)) + '/lib/chef', 'r+') do |chef|
-            chef.puts msg 
-            chef.close_write
-            msg = chef.gets.chomp + ' Bork Bork Bork!'
-        end
+        msg = filter('chef', msg.sub(/\A\/s /i, '')) + (Random.rand(10).zero? ? ' Bork Bork Bork!' : '')
+    elsif msg.downcase.start_with?('/j ')
+        msg = filter('jive', msg.sub(/\A\/j /i, ''))
+    elsif msg.downcase.start_with?('/v ')
+        msg = filter('valspeak', msg.sub(/\A\/v /i, ''))
     elsif msg.downcase.start_with?('/t ')
         msg = msg.sub(/\A\/t /i, '').downcase.gsub(/[^a-z\d]+/, '').prepend('#')
     elsif msg.downcase.start_with?('/mute ')
@@ -332,20 +348,58 @@ end
 
 Thread.new do
     loop do
-        status.addstr($status_queue.pop)
-        status.refresh
+        m = $status_queue.pop
+        draw do
+            status.addstr(m)
+            status.refresh
+        end
         sleep(3)
-        status.setpos(0, 0)
-        status.clear
-        status.refresh
+        draw do
+            status.setpos(0, 0)
+            status.clear
+            status.refresh
+        end
     end
 end
 
+Thread.new { loop { $draw_queue.pop.call } }
+
 ChatInterfaces::Network.init
+main_win.timeout = 0 
+Curses.noecho
+Curses.cbreak
+Curses.nonl
+
 loop do
-    main_win.setpos($height - 1, 0)
-    main_win.clrtoeol
-    $message_queue << [main_win.getstr, r, cookie]
+    draw do
+        main_win.setpos($height - 1, 0)
+        main_win.clrtoeol
+    end
+    msg = ''
+    ptr = 0
+    c = ''
+    while c != "\r" do
+        case c
+        when '' 
+        when 127.chr
+            ptr = [ptr.pred, 0].max
+            msg[ptr] = ''
+            draw do
+                main_win.setpos(main_win.cury, [main_win.curx.pred, 0].max)
+                main_win.delch
+            end
+        else
+            msg[ptr] = c
+            ptr += 1
+            draw { main_win.addch(c.ord) }
+        end
+        draw do
+            a = main_win.getch
+            c = a.nil? ? '' : a.chr
+        end
+        sleep(0.01)
+    end
+    $message_queue << [msg, r, cookie]
 end
 
 rescue => e
