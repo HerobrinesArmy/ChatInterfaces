@@ -26,3 +26,4 @@ Commands:
 /version                          #This displays the current version number of the script
 /profile <username>               #This gives a link to someone's profile on enjin
 /hug <username>                   #This gives the specified person a hug
+/killmusic                        #This stops the dark knight theme from playing, useful for if people overuse Dark Knight theme

@@ -1,6 +1,6 @@
 #!/bin/bash -i
 # Version 1.3.9
-trap 'kill ${GETMESSAGES_PID} >/dev/null 2>&1; rm cookie >/dev/null 2>&1; rm LAST_JSON_INPUT >/dev/null 2>&1; exit 0;' INT QUIT
+trap 'kill ${GETMESSAGES_PID} >/dev/null 2>&1; rm cookie >/dev/null 2>&1; rm LAST_JSON_INPUT >/dev/null 2>&1; rm VLC_PID >/dev/null 2>&1; exit 0;' INT QUIT
 GLOBIGNORE="*"
 VERSION="1.3.9"
 
@@ -42,6 +42,12 @@ getMessages ()
                                 fi
                     fi
             fi
+            case $INCOMING_MESSAGE in
+                *:\ Dark\ Knight\ theme)
+                    vlc --sout '#display{novideo=true}' --play-and-exit -I dummy http://www.youtube.com/watch?v=Z_DSq-LhOyU 2>/dev/null &
+                    echo -n "$! " >> VLC_PID
+                    ;;
+            esac
         done
 }
 
@@ -89,6 +95,8 @@ while getopts ":p:l:j:" OPTION
                 echo "The main chats are 8613406 (main chat) and 3 (science chat)."
                 read -e -p "Enter the chat room number you wish to join: " -i "8613406" CHAT_ROOM
                 getMessages $CHAT_ROOM
+                rm LAST_JSON_INPUT >/dev/null 2>&1
+                rm VLC_PID >/dev/null 2>&1
                 exit 0
                 ;;
             \?)
@@ -234,6 +242,10 @@ while :
                         echo "You realize that you have to enter a command, right?"
                 fi
                 ;;
+            /killmusic)
+                kill $(cat VLC_PID)
+                rm VLC_PID >/dev/null 2>&1
+                ;;
             /no)
                 postMessage "[img]http://i.imgur.com/AkGfK4Z.jpg[/img]" &
                 ;;
@@ -247,6 +259,7 @@ while :
                 kill $GETMESSAGES_PID >/dev/null 2>&1
                 rm cookie >/dev/null 2>&1
                 rm LAST_JSON_INPUT >/dev/null 2>&1
+                rm VLC_PID >/dev/null 2>&1;
                 exit 0
                 ;;
             *)
