@@ -1,9 +1,10 @@
 #!/bin/bash -i
 # Version 1.3.9
-trap 'kill ${GETMESSAGES_PID} >/dev/null 2>&1; rm cookie >/dev/null 2>&1; rm LAST_JSON_INPUT >/dev/null 2>&1; kill $(cat VLC_PID) 2>&1; rm VLC_PID >/dev/null 2>&1; exit 0;' INT QUIT
+trap 'kill ${GETMESSAGES_PID} >/dev/null 2>&1; rm cookie >/dev/null 2>&1; rm LAST_JSON_INPUT >/dev/null 2>&1; kill $(cat VLC_PID) >/dev/null 2>&1; rm VLC_PID >/dev/null 2>&1; exit 0;' INT QUIT
 GLOBIGNORE="*"
 VERSION="1.3.9"
 
+echo -n "" > VLC_PID
 # The postMessage function takes a single argument of the data you would like to post, and urlencodes and posts it
 postMessage ()
 {
@@ -44,7 +45,7 @@ getMessages ()
             fi
             case $INCOMING_MESSAGE in
                 *:\ Dark\ Knight\ theme)
-                    vlc --sout '#display{novideo=true}' --play-and-exit -I dummy http://www.youtube.com/watch?v=Z_DSq-LhOyU 2>/dev/null &
+                    vlc --sout '#display{novideo=true}' --play-and-exit -I dummy http://www.youtube.com/watch?v=Z_DSq-LhOyU >/dev/null 2>&1 &
                     echo -n "$! " >> VLC_PID
                     ;;
             esac
@@ -260,7 +261,7 @@ while :
                 kill $GETMESSAGES_PID >/dev/null 2>&1
                 rm cookie >/dev/null 2>&1
                 rm LAST_JSON_INPUT >/dev/null 2>&1
-                kill $(cat VLC_PID) 2>&1
+                kill $(cat VLC_PID) >/dev/null 2>&1
                 rm VLC_PID >/dev/null 2>&1
                 exit 0
                 ;;
