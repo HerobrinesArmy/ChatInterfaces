@@ -1,6 +1,6 @@
 #!/bin/bash -i
 # Version 1.3.9
-trap 'kill ${GETMESSAGES_PID} >/dev/null 2>&1; rm cookie >/dev/null 2>&1; rm LAST_JSON_INPUT >/dev/null 2>&1; rm VLC_PID >/dev/null 2>&1; exit 0;' INT QUIT
+trap 'kill ${GETMESSAGES_PID} >/dev/null 2>&1; rm cookie >/dev/null 2>&1; rm LAST_JSON_INPUT >/dev/null 2>&1; kill $(cat VLC_PID) 2>&1; rm VLC_PID >/dev/null 2>&1; exit 0;' INT QUIT
 GLOBIGNORE="*"
 VERSION="1.3.9"
 
@@ -96,6 +96,7 @@ while getopts ":p:l:j:" OPTION
                 read -e -p "Enter the chat room number you wish to join: " -i "8613406" CHAT_ROOM
                 getMessages $CHAT_ROOM
                 rm LAST_JSON_INPUT >/dev/null 2>&1
+                kill $(cat VLC_PID) 2>&1
                 rm VLC_PID >/dev/null 2>&1
                 exit 0
                 ;;
@@ -243,7 +244,7 @@ while :
                 fi
                 ;;
             /killmusic)
-                kill $(cat VLC_PID)
+                kill $(cat VLC_PID) 2>&1
                 rm VLC_PID >/dev/null 2>&1
                 ;;
             /no)
@@ -259,7 +260,8 @@ while :
                 kill $GETMESSAGES_PID >/dev/null 2>&1
                 rm cookie >/dev/null 2>&1
                 rm LAST_JSON_INPUT >/dev/null 2>&1
-                rm VLC_PID >/dev/null 2>&1;
+                kill $(cat VLC_PID) 2>&1
+                rm VLC_PID >/dev/null 2>&1
                 exit 0
                 ;;
             *)
