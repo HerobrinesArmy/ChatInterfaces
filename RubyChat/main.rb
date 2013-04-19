@@ -203,7 +203,7 @@ def parse(output, msg, first_time)
     msg[1] = CGI.unescapeHTML(msg[1])
     msg[1] = msg[1].gsub(/\[(?:img|youtube|url)\]/i, '').gsub(/\[\/(?:img|youtube|url)\]/i, ' ')
     if msg[1] == 'Inception horn' && !first_time
-        play_sound('http://inception.davepedu.com/inception.mp3')
+        Thread.new { `cvlc --play-and-exit -I dummy http://inception.davepedu.com/inception.mp3 2>/dev/null &` }
         op = true
     elsif msg[1] == 'Tiger' && !first_time
         play_sound('http://www.youtube.com/watch?v=btPJPFnesV4')
