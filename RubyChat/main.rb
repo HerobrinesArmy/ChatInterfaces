@@ -99,6 +99,7 @@ def init
     $status_queue = Queue.new
     $draw_queue = Queue.new
     $wolflist = Net::HTTP.get_response(URI(WOLF)).body.split("\n")
+    $music_playing = nil
 
     u_box = main_win.subwin(3, 42, center_y(3) - 2, center_x(42))
     u_box.box(0, 0)
@@ -124,6 +125,17 @@ class ClientError < StandardError; end
 
 def draw(&job)
     $draw_queue << job
+end
+
+def play_sound(name)
+    if $music_playing.nil?
+        $music_playing = name
+        Thread.new do
+            %x[vlc --play-and-exit --sout '#display{novideo=true}' -I dummy #{name} 2>/dev/null &]
+            sleep(5)
+            $music_playing = nil
+        end
+    end
 end
 
 def error(message)
@@ -191,7 +203,19 @@ def parse(output, msg, first_time)
     msg[1] = CGI.unescapeHTML(msg[1])
     msg[1] = msg[1].gsub(/\[(?:img|youtube|url)\]/i, '').gsub(/\[\/(?:img|youtube|url)\]/i, ' ')
     if msg[1] == 'Inception horn' && !first_time
-        Curses.flash
+        play_sound('http://inception.davepedu.com/inception.mp3')
+        op = true
+    elsif msg[1] == 'Tiger' && !first_time
+        play_sound('http://www.youtube.com/watch?v=btPJPFnesV4')
+        op = true
+    elsif msg[1] == 'Rave' && !first_time
+        play_sound('http://www.youtube.com/watch?v=w8kLkMgdzy0')
+        op = true
+    elsif msg[1] == 'Dark Knight theme' && !first_time
+        play_sound('http://www.youtube.com/watch?v=Z_DSq-LhOyU')
+        op = true
+    elsif msg[1] == 'Epic' && !first_time
+        play_sound('http://www.youtube.com/watch?v=k-2IT8rcdj0')
         op = true
     elsif msg[1].start_with?('/me')
         put_bold(output, "*#{msg[0].first} ", RANK_CSS[msg[0].last])
@@ -206,7 +230,7 @@ def parse(output, msg, first_time)
     if op
         unless first_time || $wolflist.nil?
             $wolflist.each_with_index do |w, i|
-                if msg[1].start_with?(w)
+                if msg[1].include?(w)
                     $status_queue << "Wolf ##{i.succ} detected."
                     $auto_wolf = i
                 end
@@ -424,13 +448,25 @@ loop do
                 main_win.delch
             end
         else
+            backup = msg[ptr]
             msg[ptr] = c
             ptr += 1
-            draw { main_win.addch(c.ord) }
+            draw do
+                begin
+                    main_win.addch(c.ord)
+                rescue => e
+                    msg[ptr] = backup
+                    ptr -= 1
+                end
+            end
         end
         draw do
             a = main_win.getch
-            c = a.nil? ? '' : a.chr rescue ''
+            begin
+                c = a.nil? ? '' : a.chr
+            rescue => e
+                c = ''
+            end
         end
         sleep(0.01)
     end
