@@ -13,6 +13,13 @@ MAIN_CHAT = 8613406
 MEETING_ROOM = 3
 USER_MATCH = /<a.+tag-(?<tag>\d+)'>(?<name>.+)<\/a>/
 WOLF = 'https://raw.github.com/HerobrinesArmy/ChatInterfaces/master/HA-Chat-bash/wolf.txt'
+SONGS = {
+    'Tiger' => 'http://www.youtube.com/watch?v=btPJPFnesV4',
+    'Rave' => 'http://www.youtube.com/watch?v=w8kLkMgdzy0',
+    'Dark Knight theme' => 'http://www.youtube.com/watch?v=Z_DSq-LhOyU',
+    'Epic' => 'http://www.youtube.com/watch?v=k-2IT8rcdj0',
+    'Turtle' => 'http://www.youtube.com/watch?v=Kr4yHEVc0eU'
+        }
 RANK_CSS = {
             '228373' => Curses.color_pair(Curses::COLOR_CYAN),
             '228361' => Curses.color_pair(Curses::COLOR_BLUE),
@@ -205,17 +212,8 @@ def parse(output, msg, first_time)
     if msg[1] == 'Inception horn' && !first_time
         Thread.new { `cvlc --play-and-exit -I dummy http://inception.davepedu.com/inception.mp3 2>/dev/null &` }
         op = true
-    elsif msg[1] == 'Tiger' && !first_time
-        play_sound('http://www.youtube.com/watch?v=btPJPFnesV4')
-        op = true
-    elsif msg[1] == 'Rave' && !first_time
-        play_sound('http://www.youtube.com/watch?v=w8kLkMgdzy0')
-        op = true
-    elsif msg[1] == 'Dark Knight theme' && !first_time
-        play_sound('http://www.youtube.com/watch?v=Z_DSq-LhOyU')
-        op = true
-    elsif msg[1] == 'Epic' && !first_time
-        play_sound('http://www.youtube.com/watch?v=k-2IT8rcdj0')
+    elsif SONGS.has_key?(msg[1]) && !first_time
+        play_sound(SONGS[msg[1]])
         op = true
     elsif msg[1].start_with?('/me')
         put_bold(output, "*#{msg[0].first} ", RANK_CSS[msg[0].last])
