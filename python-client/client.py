@@ -36,19 +36,21 @@ class ChatClient:
 
     def postloop(self):
         while self.run:
-            self.postmessage(self.postqueue.get())
+            item = self.postqueue.get()
+            self.postmessage(item)
             time.sleep(2)
 
     def start(self):
         if not self.auth(): return
         self.run = True
-        self.getthread = threading.Thread(target=self.getloop)
+        self.getthread = threading.Thread(target=self.getloop, daemon=True)
         self.getthread.start()
-        self.postthread = threading.Thread(target=self.postloop)
+        self.postthread = threading.Thread(target=self.postloop, daemon=True)
         self.postthread.start()
 
     def stop(self):
         self.run = False
+        self.postqueue.join()
         self.postthread.join()
         self.getthread.join()
 
@@ -191,6 +193,6 @@ if __name__ == '__main__':
                 client.post(cmd)
             cmd = input('  > ')
     except Exception as e:
-        client.stop()
+        #client.stop()
         raise e
-    client.stop()
+    #client.stop()
