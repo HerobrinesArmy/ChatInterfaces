@@ -23,6 +23,7 @@ class ChatClient:
                                            request.HTTPRedirectHandler)
         self.lmid = '0'
         self.chatroom = '8613406'
+        self.username = ''
         self.domain = 'http://'
         self.domain += socket.getaddrinfo('herobrinesarmy.com', 'http')[0][4][0]
         self.htmlre = re.compile(r'\<(?:[^\>\"\']|(?:\"(?:[^\"\\]|(?:\\.))*\")\
@@ -93,12 +94,14 @@ class ChatClient:
         return True
 
     def auth(self, username=None, password=None):
+        if username: self.username = username
         if self.isauthed():
             return True
         else:
             if not username:
                 username = input('Username: ')
                 password = getpass.getpass()
+                self.username = username
             elif not password:
                 password = getpass.getpass()
             data = bytes('user=' + username + '&pass=' + password,
@@ -209,11 +212,13 @@ class Poster:
 
 
 class ChatBot:
-    def __init__(self, client, poster=None):
+    def __init__(self, client):
+        global player, poster
         self.client = client
         client.onreceive.append(self.handler)
         self.poster = poster
-        self.on = False
+        self.player = player
+        self.on = self.client.username == 'Lucus'
         self.banlist = set()
         self.ponies = ['http://herobrinesarmy.com/smileys/biaAf.gif',
                        'http://i.imgur.com/FTizd6W.gif',
@@ -248,7 +253,14 @@ class ChatBot:
                 self.on = False
             elif text.lower().startswith('ping'):
                 self.post('/meBot: My ping time to herobrinesarmy.com is ' +
-                          ping())
+                          ping() + 'ms')
+            elif text.lower().startswith('song status'):
+                status = self.player.status()
+                if status == '':
+                    self.post('/meBot: Nothing playing right now.')
+                else:
+                    self.post('/meBot: Current song playing: [youtube]' +
+                              status + '[/youtube]')
 
     def localcmd(self, cmd):
         if cmd.startswith('ban '):
@@ -257,10 +269,48 @@ class ChatBot:
             self.banlist.discard(cmd[6:])
         elif cmd.startswith('on'):
             self.on = True
+            print('ChatBot is on')
         elif cmd.startswith('off'):
             self.on = False
+            print('ChatBot is off')
         elif cmd.startswith('status'):
             print('ChatBot is ' + ('on' if self.on else 'off'))
+
+
+class MusicPlayer:
+    def __init__(self):
+        self.playproc = None
+        self.playing = ''
+        self.on = True
+
+    def play(self, url):
+        if self.playproc != None and self.playproc.poll() == None:
+            return False
+        if url == '' or not self.on:
+            return False
+        self.playing = url
+        self.playproc = subprocess.Popen(['cvlc', url, '--no-video',
+                                          '--play-and-exit'],
+                                         stdout=subprocess.DEVNULL,
+                                         stderr=subprocess.DEVNULL)
+        return True
+
+    def stop(self):
+        self.playproc.terminate()
+
+    def status(self):
+        if self.playproc.poll() != None:
+            self.playing = ''
+        return self.playing
+
+    def localcmd(self, c):
+        c = c.split(' ') + ['', '']
+        if c[0] == 'play':
+            self.play(c[1])
+        elif c[0] == 'stop':
+            self.stop()
+        elif c[0] == 'status':
+            print('Currently playing: ' + self.status())
 
 
 def bold(text):
@@ -296,6 +346,10 @@ def ping(url='herobrinesarmy.com'):
     except:
         return 'failure'
 
+def run(cmd):
+    p = subprocess.Popen(cmd.split(' '), stdout=subprocess.PIPE)
+    return [x.decode('utf-8') for x in iter(p.stdout.readline, b'')]
+
 
 if __name__ == '__main__':
     def printmid(text):
@@ -305,6 +359,12 @@ if __name__ == '__main__':
         print('\r' + text + ' ' * (79 - l) + '\n  > ' + buffer, end='')
         readline.redisplay()
     def printchat(text, user, sendtime, msgid, userid):
+        global lastsong
+        ys = text.find('[youtube]')
+        ye = text.find('[/youtube]')
+        if text.startswith('/meBot: Current song playing:'):
+            ys = -1
+        otext = text
         user = bold(user)
         text = stylize(text)
         if text.startswith('/me'):
@@ -313,6 +373,9 @@ if __name__ == '__main__':
             text = user + ': ' + text
         text = sendtime + ' ' + text
         printmid(text)
+        if ys != -1:
+            lastsong = (otext + ' ')[ys + 9:ye]
+            printmid('Type /play to listen to this song')
 
     def userhandler(lastusers, users):
         left = lastusers - users
@@ -326,7 +389,9 @@ if __name__ == '__main__':
 
     client = ChatClient()
     poster = Poster().add('wolf', plural='wolves')
+    player = MusicPlayer()
     lastusers = set()
+    lastsong = ''
     if not client.auth():
         print('Could not authorize.')
         exit()
@@ -336,29 +401,25 @@ if __name__ == '__main__':
     cmd = input('  > ')
     while not client.firstdone:
         time.sleep(0)
-    bot = ChatBot(client, poster)
+    bot = ChatBot(client)
     while cmd not in ['/exit', '/quit']:
         if cmd == '':
             pass
         elif cmd.startswith('/bot '):
             bot.localcmd(cmd[5:])
-        elif cmd.startswith('/user'):
-            print(', '.join([bold(user) for user in list(client.users)]))
         elif cmd.startswith('/calc '):
             try:
                 client.post(cmd[6:] + ' = ' + str(eval(cmd[6:])))
             except:
                 print('That did not work...')
-        elif cmd.startswith('/wolf'):
-            tmp = poster.run(cmd[1:])
-            if tmp.startswith('[img]'):
-                client.post(tmp)
-            else:
-                print(tmp)
         elif cmd.startswith('/eval '):
             print(str(eval(cmd[6:])))
+        elif cmd.startswith('/music '):
+            player.localcmd(cmd[7:])
         elif cmd.startswith('/ping'):
-            print('Ping time to herobrinesarmy.com: ' + ping())
+            print('Ping time to herobrinesarmy.com: ' + ping() + 'ms')
+        elif cmd.startswith('/play'):
+            player.play(lastsong)
         elif cmd.startswith('/robo '):
             client.post(' '.join('-'.join(list(x))
                                  for x in cmd[6:].split(' ')))
@@ -366,6 +427,16 @@ if __name__ == '__main__':
             if not client.setchannel(cmd[6:]):
                 print('WARNING: Could not switch channels because ' +
                          'the post queue is not empty.')
+        elif cmd.startswith('/stop'):
+            player.stop()
+        elif cmd.startswith('/user'):
+            print(', '.join([bold(user) for user in list(client.users)]))
+        elif cmd.startswith('/wolf'):
+            tmp = poster.run(cmd[1:])
+            if tmp.startswith('[img]'):
+                client.post(tmp)
+            else:
+                print(tmp)
         else:
             client.post(cmd)
         cmd = input('  > ')
