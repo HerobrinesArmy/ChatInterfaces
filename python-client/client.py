@@ -12,15 +12,12 @@ import json
 import time
 import re
 
-#message.[message_id, user, message, time, user_id]
 
 class ChatClient:
     def __init__(self):
         cj = http.cookiejar.CookieJar()
         self.opener = request.build_opener(request.HTTPCookieProcessor(cj),
                                            request.HTTPRedirectHandler)
-        self.username = ''
-        self.password = ''
         self.lmid = '0'
         self.chatroom = '8613406'
         self.domain = 'http://'
@@ -29,16 +26,19 @@ class ChatClient:
 |(?:\'(?:[^\'\\]|(?:\\.))*\'))*\>')
         self.htmlentre = re.compile(r'&([^;]+);')
         self.onreceive = []
-        self.doautohandle = False
-        self.lastsend = 0
+        self.onuserchange = []
         self.postqueue = queue.Queue()
+        self.lastsend = 0
         self.run = False
+        self.firstdone = False
+        self.users = set()
+        self.lastusers = set()
 
     def postloop(self):
         while self.run:
             item = self.postqueue.get()
             self.postmessage(item)
-            time.sleep(2)
+            time.sleep(3)
 
     def start(self):
         if not self.auth(): return
@@ -49,24 +49,32 @@ class ChatClient:
         self.postthread.start()
 
     def stop(self):
+        #DOESN'T WORK
         self.run = False
         self.postqueue.join()
         self.postthread.join()
         self.getthread.join()
 
     def post(self, text):
-        self.postqueue.put(text)
+        if text != '':
+            self.postqueue.put(text)
+            return True
+        else:
+            return False
 
     def getloop(self):
-        msgs = self.getmessages()
         while self.run:
+            msgs = self.getmessages()
             for msg in msgs:
                 text = self.unescape(msg['message'])
                 user = self.striphtml(msg['user'])
+                sendtime = msg['time']
+                msgid = msg['message_id']
+                userid = msg['user_id']
                 for handler in self.onreceive:
-                    handler(text, user)
+                    handler(text, user, sendtime, msgid, userid)
+            self.firstdone = True
             time.sleep(1)
-            msgs = self.getmessages()
 
     def setchannel(self, channel):
         if not self.postqueue.empty():
@@ -82,17 +90,15 @@ class ChatClient:
         return True
 
     def auth(self, username=None, password=None):
-        if username: self.username = username
-        if password: self.password = password
         if self.isauthed():
             return True
         else:
-            if not self.username:
-                self.username = input('Username: ')
-                self.password = getpass.getpass()
-            elif not self.password:
-                self.password = getpass.getpass()
-            data = bytes('user=' + self.username + '&pass=' + self.password,
+            if not username:
+                username = input('Username: ')
+                password = getpass.getpass()
+            elif not password:
+                password = getpass.getpass()
+            data = bytes('user=' + username + '&pass=' + password,
                          'utf-8')
             self.opener.open(self.domain + '/auth.php', data, timeout=60)
         return self.isauthed()
@@ -106,19 +112,24 @@ class ChatClient:
         try:
             response = self.opener.open(url, timeout=60).read().decode('utf-8')
         except:
-            pass
+            return []
         try:
             parsed = json.loads(response[1:-1])
         except ValueError:
             return []
         self.lmid = parsed['lmid']
-        self.users = parsed['users']
+        self.lastusers = self.users
+        self.users = set([self.striphtml(x['user'])
+                          for x in parsed['users'].values()])
+        if self.users != self.lastusers:
+            for handler in self.onuserchange:
+                handler(self.lastusers, self.users)
         try:
             msgs = list(parsed['messages'].items())
-            msgs.sort()
-            return [b for a, b in msgs]
         except KeyError:
             return []
+        msgs.sort()
+        return [b for a, b in msgs]
 
     def postmessage(self, text):
         encoded = urllib.parse.quote(text.strip()[:512])
@@ -137,62 +148,182 @@ class ChatClient:
                 html.entities.entitydefs[x.group(1)], text)
 
 
+class Cooldown:
+    def __init__(self, cooldown):
+        self.cooldown = cooldown
+        self.last = 0
+
+    def cast(self):
+        if time.time() - self.cooldown > self.last:
+            self.last = time.time()
+            return True
+        else:
+            return False
+
+    def left(self):
+        return max(self.cooldown - time.time() + self.last, 0)
+
+
+class Poster:
+    def __init__(self):
+        self.lists = {}
+        #self.lists[cmd] = (list, single, plural, last, count)
+
+    def add(self, cmd, file=None, single=None, plural=None):
+        if file == None:
+            file = cmd
+        if single == None:
+            single = cmd
+        if plural == None:
+            plural = cmd + 's'
+        try:
+            with open(file, 'r') as f:
+                tmp = [x.strip() for x in f.readlines()]
+                self.lists[cmd] = [tmp, single, plural, 0, len(tmp)]
+        except IOError:
+            pass
+        return self
+
+    def run(self, c):
+        c = c.strip().lower().split(' ') + ['', '']
+        try:
+            l, single, plural, last, count = self.lists[c[0]]
+        except KeyError:
+            return ''
+        if c[1].startswith('count'):
+            return 'Number of ' + plural + ' loaded: ' + str(count)
+        elif c[1].startswith('previous'):
+            return 'Last posted ' + single + ' was: ' + str(last)
+        else:
+            try:
+                last = int(c[1]) - 1
+                if last < 0 or last >= count:
+                    raise ValueError
+            except ValueError:
+                last = random.randint(0, count - 1)
+            self.lists[c[0]] = (l, single, plural, last, count)
+            return '[img]' + l[last] + '[/img]'
+
+
+class ChatBot:
+    def __init__(self, client, poster=None):
+        self.client = client
+        client.onreceive.append(self.handler)
+        self.poster = poster
+        self.on = True
+        self.banlist = set()
+        self.ponies = ['http://herobrinesarmy.com/smileys/biaAf.gif',
+                       'http://i.imgur.com/FTizd6W.gif',
+                       ':pony:']
+
+    def handler(self, text, user, sendtime, msgid, userid):
+        if not self.on: return
+        original = text
+        loc = text.lower().find('@lucusbot ')
+        if any([x in text for x in self.ponies]):
+            client.post(':pokeball:')
+        elif 'lucus' in text.lower() and loc == -1 and user != 'Lucus':
+            if ':hug:' in text.lower() or ':manhug:' in text.lower():
+                client.post('/me hugs ' + user + ' :hug:')
+            elif ':tighthug:' in text.lower():
+                client.post('/me hugs ' + user + ' :hug: <3')
+            elif '::stare:' in text.lower():
+                client.post('@' + user + ' :stare:')
+            elif ':stare:' in text.lower():
+                client.post('@' + user + ' ::stare:')
+        elif ':allthethings:' in text:
+            client.post(':att:*')
+        elif loc != -1 and user not in self.banlist:
+            text = text[loc + 10:].strip()
+            if self.poster: tmp = self.poster.run(text)
+            if self.poster and tmp != '':
+                client.post(tmp)
+            elif text.lower().startswith('exit'):
+                self.on = False
+
+    def localcmd(self, cmd):
+        if cmd.startswith('ban '):
+            self.banlist.add(cmd[4:])
+        elif cmd.startswith('unban '):
+            self.banlist.discard(cmd[6:])
+        elif cmd.startswith('on'):
+            self.on = True
+        elif cmd.startswith('off'):
+            self.on = False
+        elif cmd.startswith('status'):
+            print('ChatBot is ' + ('on' if self.on else 'off'))
+
+
+def bold(text):
+    return '\033[1m' + text + '\033[0;0m'
+
+
 if __name__ == '__main__':
     def printmid(text):
+        if text == '': return
+        l = len(text.replace('\033[1m', '').replace('\033[0;0m', ''))
         buffer = readline.get_line_buffer()
-        print('\r' + text + ' ' * min(len(buffer) - len(text) + 4, 79 -
-                                      len(text)) + '\n  > ' + buffer, end='')
+        print('\r' + text + ' ' * (79 - l) + '\n  > ' + buffer, end='')
         readline.redisplay()
-    def printchat(text, user):
+    def printchat(text, user, sendtime, msgid, userid):
+        user = bold(user)
         if text.startswith('/me'):
             text = '* ' + user + text[3:]
         else:
             text = user + ': ' + text
+        text = sendtime + ' ' + text
         printmid(text)
 
-    with open('../HA-Chat-bash/wolf.txt', 'r') as f:
-        wolves = [x.strip() for x in f.readlines()]
-    lastwolf = 0
-    wolfcount = len(wolves)
-    try:
-        client = ChatClient()
-        if not client.auth():
-            print('Could not authorize.')
-            exit()
-        client.onreceive.append(printchat)
-        client.start()
-        cmd = ''
-        while cmd not in ['/exit', '/quit']:
-            if cmd == '':
-                pass
-            elif cmd.startswith('/wolf'):
-                c = cmd[6:].strip()
-                if c.startswith('count'):
-                    printmid('Number of wolves loaded: ' + str(wolfcount))
-                elif c.startswith('previous'):
-                    printmid('Last posted wolf was: ' + str(lastwolf + 1))
-                else:
-                    if ' ' in c: c = c[:c.find(' ')]
-                    try:
-                        lastwolf = int(c) - 1
-                        if lastwolf < 0 or lastwolf >= wolfcount:
-                            raise ValueError
-                    except ValueError:
-                        lastwolf = random.randint(0, wolfcount - 1)
-                    client.post('[img]' + wolves[lastwolf] + '[/img]')
-            elif cmd.startswith('/eval '):
-                print(str(eval(cmd[6:]))[:512])
-            elif cmd.startswith('/robo '):
-                client.post(' '.join('-'.join(list(x))
-                                     for x in cmd[6:].split(' ')))
-            elif cmd.startswith('/room '):
-                if not client.setchannel(cmd[6:]):
-                    printmid('WARNING: Could not switch channels because ' +
-                             'the post queue is not empty.')
+    def userhandler(lastusers, users):
+        left = lastusers - users
+        joined = users - lastusers
+        if left:
+            printmid('Users left: ' +
+                     ', '.join([bold(user) for user in list(left)]))
+        if joined:
+            printmid('Users joined: ' +
+                     ', '.join([bold(user) for user in list(joined)]))
+
+    client = ChatClient()
+    poster = Poster().add('wolf', plural='wolves')
+    lastusers = set()
+    if not client.auth():
+        print('Could not authorize.')
+        exit()
+    client.onreceive.append(printchat)
+    client.onuserchange.append(userhandler)
+    client.start()
+    cmd = input('  > ')
+    while not client.firstdone:
+        time.sleep(0)
+    bot = ChatBot(client, poster)
+    while cmd not in ['/exit', '/quit']:
+        if cmd == '':
+            pass
+        elif cmd.startswith('/bot '):
+            bot.localcmd(cmd[5:])
+        elif cmd.startswith('/user'):
+            print(', '.join([bold(user) for user in list(client.users)]))
+        elif cmd.startswith('/calc '):
+            try:
+                client.post(cmd[6:] + ' = ' + str(eval(cmd[6:])))
+            except:
+                print('That did not work...')
+        elif cmd.startswith('/wolf'):
+            tmp = poster.run(cmd[1:])
+            if tmp.startswith('[img]'):
+                client.post(tmp)
             else:
-                client.post(cmd)
-            cmd = input('  > ')
-    except Exception as e:
-        #client.stop()
-        raise e
-    #client.stop()
+                print(tmp)
+        elif cmd.startswith('/eval '):
+            print(str(eval(cmd[6:])))
+        elif cmd.startswith('/robo '):
+            client.post(' '.join('-'.join(list(x))
+                                 for x in cmd[6:].split(' ')))
+        elif cmd.startswith('/room '):
+            if not client.setchannel(cmd[6:]):
+                print('WARNING: Could not switch channels because ' +
+                         'the post queue is not empty.')
+        else:
+            client.post(cmd)
+        cmd = input('  > ')
