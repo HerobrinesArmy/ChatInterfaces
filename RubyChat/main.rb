@@ -18,7 +18,9 @@ SONGS = {
     'Rave' => 'http://www.youtube.com/watch?v=w8kLkMgdzy0',
     'Dark Knight theme' => 'http://www.youtube.com/watch?v=Z_DSq-LhOyU',
     'Epic' => 'http://www.youtube.com/watch?v=k-2IT8rcdj0',
-    'Turtle' => 'http://www.youtube.com/watch?v=Kr4yHEVc0eU'
+    'Turtle' => 'http://www.youtube.com/watch?v=Kr4yHEVc0eU',
+    ':rock:' => 'http://www.youtube.com/watch?v=CSvFpBOe8eY',
+    ':chemistry:' => 'http://www.youtube.com/watch?v=nMWGXt979yg'
         }
 RANK_CSS = {
             '228373' => Curses.color_pair(Curses::COLOR_CYAN),
@@ -205,15 +207,25 @@ def rot13(str)
     end.join('')
 end
 
-def parse(output, msg, first_time)
+def parse(output, msg, first_time, room, cookie)
     op = false
     msg[1] = CGI.unescapeHTML(msg[1])
     msg[1] = msg[1].gsub(/\[(?:img|youtube|url)\]/i, '').gsub(/\[\/(?:img|youtube|url)\]/i, ' ')
     if msg[1] == 'Inception horn' && !first_time
         Thread.new { `cvlc --play-and-exit -I dummy http://inception.davepedu.com/inception.mp3 2>/dev/null &` }
         op = true
-    elsif SONGS.has_key?(msg[1]) && !first_time
+    elsif !first_time && SONGS.has_key?(msg[1])
         play_sound(SONGS[msg[1]])
+        op = true
+    elsif !first_time && (s = msg[1].match(/@awesomebot play (?<song>[\w-]+)/i))
+        if $music_playing
+            $message_queue << ['/mebot: Hey, fucker. Wait your turn.', room, cookie, output]
+        else
+            play_sound("http://www.youtube.com/watch?v=#{s[:song]}")
+        end
+        op = true
+    elsif !first_time && cf(msg[1]) == '@awesomebot song status'
+        $message_queue << ["/mebot: #{$music_playing ? "[youtube]#{$music_playing}[/youtube]" : 'No song'} is currently playing.", room, cookie, output]
         op = true
     elsif msg[1].start_with?('/me')
         put_bold(output, "*#{msg[0].first} ", RANK_CSS[msg[0].last])
@@ -265,7 +277,7 @@ Thread.new do
             end
             first_time = lmid.zero?
             draw do
-                messages.each { |msg| parse(chat_display, msg, first_time) unless $muted[msg[0].first] }
+                messages.each { |msg| parse(chat_display, msg, first_time, r, cookie) unless $muted[msg[0].first] }
                 chat_display.refresh
                 user_display.setpos(user_display.begy, user_display.begx)
                 user_display.clear
@@ -437,7 +449,6 @@ loop do
     c = ''
     while c != "\r" do
         case c
-        when '' 
         when 127.chr
             ptr = [ptr.pred, 0].max
             msg[ptr] = ''
@@ -446,26 +457,18 @@ loop do
                 main_win.delch
             end
         else
-            backup = msg[ptr]
-            msg[ptr] = c
-            ptr += 1
-            draw do
-                begin
-                    main_win.addch(c.ord)
-                rescue => e
-                    msg[ptr] = backup
-                    ptr -= 1
-                end
-            end
-        end
-        draw do
-            a = main_win.getch
             begin
-                c = a.nil? ? '' : a.chr
-            rescue => e
-                c = ''
+                n = c.ord
+            rescue
+                n = nil
+            end
+            unless n.nil?
+                msg[ptr] = c
+                ptr += 1
+                draw { main_win.addch(n) }
             end
         end
+        draw { c = main_win.getch.chr.to_s rescue '' }
         sleep(0.01)
     end
     $message_queue << [msg, r, cookie, chat_display]
