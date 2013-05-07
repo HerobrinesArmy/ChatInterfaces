@@ -1,7 +1,10 @@
+#!/usr/bin/python3.3
+
 import urllib.request as request
 import http.cookiejar
 import html.entities
 import urllib.parse
+import subprocess
 import threading
 import readline
 import getpass
@@ -216,30 +219,36 @@ class ChatBot:
                        'http://i.imgur.com/FTizd6W.gif',
                        ':pony:']
 
+    def post(self, text):
+        self.client.post(text)
+
     def handler(self, text, user, sendtime, msgid, userid):
         if not self.on: return
         original = text
         loc = text.lower().find('@lucusbot ')
         if any([x in text for x in self.ponies]):
-            client.post(':pokeball:')
+            self.post(':pokeball:')
         elif 'lucus' in text.lower() and loc == -1 and user != 'Lucus':
             if ':hug:' in text.lower() or ':manhug:' in text.lower():
-                client.post('/me hugs ' + user + ' :hug:')
+                self.post('/me hugs ' + user + ' :hug:')
             elif ':tighthug:' in text.lower():
-                client.post('/me hugs ' + user + ' :hug: <3')
+                self.post('/me hugs ' + user + ' :hug: <3')
             elif '::stare:' in text.lower():
-                client.post('@' + user + ' :stare:')
+                self.post('@' + user + ' :stare:')
             elif ':stare:' in text.lower():
-                client.post('@' + user + ' ::stare:')
+                self.post('@' + user + ' ::stare:')
         elif ':allthethings:' in text:
-            client.post(':att:*')
+            self.post(':att:*')
         elif loc != -1 and user not in self.banlist:
             text = text[loc + 10:].strip()
             if self.poster: tmp = self.poster.run(text)
             if self.poster and tmp != '':
-                client.post(tmp)
+                self.post('/meBot: ' + tmp)
             elif text.lower().startswith('exit'):
                 self.on = False
+            elif text.lower().startswith('ping'):
+                self.post('/meBot: My ping time to herobrinesarmy.com is ' +
+                          ping())
 
     def localcmd(self, cmd):
         if cmd.startswith('ban '):
@@ -255,7 +264,37 @@ class ChatBot:
 
 
 def bold(text):
-    return '\033[1m' + text + '\033[0;0m'
+    return '\033[1m' + text + '\033[22m'
+
+def italic(text):
+    return '\033[3m' + text + '\033[23m'
+
+def underline(text):
+    return '\033[4m' + text + '\033[24m'
+
+def strikethrough(text):
+    return '\033[9m' + text + '\033[29m'
+
+rules = [
+    ('[b]', '\033[1m'), ('[/b]', '\033[22m'),
+    ('[i]', '\033[3m'), ('[/i]', '\033[23m'),
+    ('[u]', '\033[4m'), ('[/u]', '\033[24m'),
+    ('[s]', '\033[9m'), ('[/s]', '\033[29m'),
+    ]
+
+def stylize(text):
+    for rule in rules:
+        text = text.replace(*rule)
+    return text
+
+def ping(url='herobrinesarmy.com'):
+    try:
+        p = subprocess.Popen(['ping', '-c1', url],
+                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        l = [x.decode('utf-8') for x in iter(p.stdout.readline, b'')]
+        return [x for x in l if x.startswith('rtt')][0].split('/')[4]
+    except:
+        return 'failure'
 
 
 if __name__ == '__main__':
@@ -267,6 +306,7 @@ if __name__ == '__main__':
         readline.redisplay()
     def printchat(text, user, sendtime, msgid, userid):
         user = bold(user)
+        text = stylize(text)
         if text.startswith('/me'):
             text = '* ' + user + text[3:]
         else:
@@ -317,6 +357,8 @@ if __name__ == '__main__':
                 print(tmp)
         elif cmd.startswith('/eval '):
             print(str(eval(cmd[6:])))
+        elif cmd.startswith('/ping'):
+            print('Ping time to herobrinesarmy.com: ' + ping())
         elif cmd.startswith('/robo '):
             client.post(' '.join('-'.join(list(x))
                                  for x in cmd[6:].split(' ')))
