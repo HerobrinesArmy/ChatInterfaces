@@ -210,7 +210,7 @@ class ChatBot:
         self.client = client
         client.onreceive.append(self.handler)
         self.poster = poster
-        self.on = True
+        self.on = False
         self.banlist = set()
         self.ponies = ['http://herobrinesarmy.com/smileys/biaAf.gif',
                        'http://i.imgur.com/FTizd6W.gif',
