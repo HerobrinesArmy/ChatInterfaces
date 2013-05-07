@@ -37,6 +37,18 @@ class ChatClient:
         self.firstdone = False
         self.users = set()
         self.lastusers = set()
+        self.userc = {}
+        self.tagtotermc = {
+            '228373': '\033[38;5;172m',    #c60 'd46a00', Aerospace
+            '228361': '\033[38;5;075m',    #39f '3888ff', Science
+            '228640': '\033[38;5;133m',    #939 '82329c', Transport
+            '228677': '\033[38;5;196m',    #f00 'dd2423', Fleet
+            '232043': '\033[38;5;028m',    #060 '007500', Scavenging
+            '271886': '\033[38;5;145m',    #999 'a6a6a6', Unenlisted
+            '228080': '\033[38;5;226m',    #ff0 'ffff00', High Command
+            '223534': '\033[38;5;160m',    #c00 'd12626', Herobrine
+            }                              #Default is /033[39m
+
 
     def postloop(self):
         while self.run:
@@ -125,8 +137,12 @@ class ChatClient:
             return []
         self.lmid = parsed['lmid']
         self.lastusers = self.users
-        self.users = set([self.striphtml(x['user'])
-                          for x in parsed['users'].values()])
+        self.users = set([x['user_id'] for x in parsed['users'].values()])
+        [self.adduserc(u) for u in parsed['users'].values()]
+        try:
+            [self.adduserc(u) for u in parsed['messages'].values()]
+        except KeyError:
+            pass
         if self.users != self.lastusers:
             for handler in self.onuserchange:
                 handler(self.lastusers, self.users)
@@ -136,6 +152,12 @@ class ChatClient:
             return []
         msgs.sort()
         return [b for a, b in msgs]
+
+    def adduserc(self, u):
+        tagl = u['user'].find('tag-')
+        name = self.tagtotermc[u['user'][tagl + 4:tagl + 10]]
+        name += self.striphtml(u['user']) + '\033[39m'
+        self.userc[u['user_id']] = name
 
     def postmessage(self, text):
         encoded = urllib.parse.quote(text.strip()[:512])
@@ -175,7 +197,8 @@ class Poster:
         self.lists = {}
         #self.lists[cmd] = (list, single, plural, last, count)
 
-    def add(self, cmd, file=None, single=None, plural=None):
+    def add(self, cmd, file=None, single=None, plural=None, pre='[img]',
+            post='[/img]'):
         if file == None:
             file = cmd
         if single == None:
@@ -185,7 +208,7 @@ class Poster:
         try:
             with open(file, 'r') as f:
                 tmp = [x.strip() for x in f.readlines()]
-                self.lists[cmd] = [tmp, single, plural, 0, len(tmp)]
+                self.lists[cmd] = (tmp, single, plural, 0, len(tmp), pre, post)
         except IOError:
             pass
         return self
@@ -193,7 +216,7 @@ class Poster:
     def run(self, c):
         c = c.strip().lower().split(' ') + ['', '']
         try:
-            l, single, plural, last, count = self.lists[c[0]]
+            l, single, plural, last, count, pre, post = self.lists[c[0]]
         except KeyError:
             return ''
         if c[1].startswith('count'):
@@ -207,8 +230,8 @@ class Poster:
                     raise ValueError
             except ValueError:
                 last = random.randint(0, count - 1)
-            self.lists[c[0]] = (l, single, plural, last, count)
-            return '[img]' + l[last] + '[/img]'
+            self.lists[c[0]] = (l, single, plural, last, count, pre, post)
+            return pre + l[last] + post
 
 
 class ChatBot:
@@ -337,6 +360,9 @@ def stylize(text):
         text = text.replace(*rule)
     return text
 
+def getuser(usrid):
+    return client.userc[usrid]
+
 def ping(url='herobrinesarmy.com'):
     try:
         p = subprocess.Popen(['ping', '-c1', url],
@@ -354,7 +380,7 @@ def run(cmd):
 if __name__ == '__main__':
     def printmid(text):
         if text == '': return
-        l = len(text.replace('\033[1m', '').replace('\033[0;0m', ''))
+        l = len(text)
         buffer = readline.get_line_buffer()
         print('\r' + text + ' ' * (79 - l) + '\n  > ' + buffer, end='')
         readline.redisplay()
@@ -365,14 +391,14 @@ if __name__ == '__main__':
         if text.startswith('/meBot: Current song playing:'):
             ys = -1
         otext = text
-        user = bold(user)
+        user = getuser(userid)
         text = stylize(text)
         if text.startswith('/me'):
             text = '* ' + user + text[3:]
         else:
             text = user + ': ' + text
         text = sendtime + ' ' + text
-        printmid(text)
+        printmid(text + '\033[0m')
         if ys != -1:
             lastsong = (otext + ' ')[ys + 9:ye]
             printmid('Type /play to listen to this song')
@@ -382,13 +408,15 @@ if __name__ == '__main__':
         joined = users - lastusers
         if left:
             printmid('Users left: ' +
-                     ', '.join([bold(user) for user in list(left)]))
+                     ', '.join([getuser(user) for user in list(left)]))
         if joined:
             printmid('Users joined: ' +
-                     ', '.join([bold(user) for user in list(joined)]))
+                     ', '.join([getuser(user) for user in list(joined)]))
 
     client = ChatClient()
     poster = Poster().add('wolf', plural='wolves')
+    poster.add('song', pre='[youtube]http://youtube.com/watch?v=',
+               post='[/youtube]')
     player = MusicPlayer()
     lastusers = set()
     lastsong = ''
@@ -416,10 +444,15 @@ if __name__ == '__main__':
             print(str(eval(cmd[6:])))
         elif cmd.startswith('/music '):
             player.localcmd(cmd[7:])
+        elif cmd == '/n':
+            client.post(':ninja:')
         elif cmd.startswith('/ping'):
             print('Ping time to herobrinesarmy.com: ' + ping() + 'ms')
         elif cmd.startswith('/play'):
-            player.play(lastsong)
+            if cmd[6:].strip().startswith('random'):
+                player.play(poster.run('song')[9:-10])
+            else:
+                player.play(lastsong)
         elif cmd.startswith('/robo '):
             client.post(' '.join('-'.join(list(x))
                                  for x in cmd[6:].split(' ')))
@@ -430,7 +463,7 @@ if __name__ == '__main__':
         elif cmd.startswith('/stop'):
             player.stop()
         elif cmd.startswith('/user'):
-            print(', '.join([bold(user) for user in list(client.users)]))
+            print(', '.join([getuser(user) for user in list(client.users)]))
         elif cmd.startswith('/wolf'):
             tmp = poster.run(cmd[1:])
             if tmp.startswith('[img]'):
