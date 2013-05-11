@@ -22,6 +22,7 @@ class ChatClient:
         self.opener = request.build_opener(request.HTTPCookieProcessor(cj),
                                            request.HTTPRedirectHandler)
         self.lmid = '0'
+        self.lpid = 0
         self.chatroom = '8613406'
         self.username = ''
         self.domain = 'http://'
@@ -32,7 +33,6 @@ class ChatClient:
         self.onreceive = []
         self.onuserchange = []
         self.postqueue = queue.Queue()
-        self.lastsend = 0
         self.run = False
         self.firstdone = False
         self.users = set()
@@ -46,7 +46,7 @@ class ChatClient:
             '232043': '\033[38;5;028m',    #060 '007500', Scavenging
             '271886': '\033[38;5;145m',    #999 'a6a6a6', Unenlisted
             '228080': '\033[38;5;226m',    #ff0 'ffff00', High Command
-            '223534': '\033[38;5;160m',    #c00 'd12626', Herobrine
+            '223534': '\033[38;5;196m',    #c00 'd12626', Herobrine
             }                              #Default is /033[39m
 
 
@@ -78,11 +78,21 @@ class ChatClient:
         else:
             return False
 
+    def mtat(self):
+        self.post('Testing message turnaround time...')
+
     def getloop(self):
         while self.run:
             msgs = self.getmessages()
             for msg in msgs:
                 text = self.unescape(msg['message'])
+                if text == 'Testing message turnaround time...':
+                    try:
+                        self.post('Message turnaround time: ' +
+                                  str(int((time.time() - self.lastping) *
+                                          1000)) + 'ms')
+                    except AttributeError:
+                        pass
                 user = self.striphtml(msg['user'])
                 sendtime = msg['time']
                 msgid = msg['message_id']
@@ -162,10 +172,13 @@ class ChatClient:
     def postmessage(self, text):
         encoded = urllib.parse.quote(text.strip()[:512])
         if encoded == '': return False
-        if time.time() - self.lastsend < 2:
-            time.sleep(2)
-        self.opener.open(self.domain + '/post_chat.php?c=' + self.chatroom +
-                         '&o=1&m=' + encoded, timeout=60)
+        try:
+            self.opener.open(self.domain + '/post_chat.php?c=' + self.chatroom +
+                             '&o=1&m=' + encoded, timeout=60)
+        except:
+            pass
+        if text == 'Testing message turnaround time...':
+            self.lastping = time.time()
         self.lastsend = time.time()
 
     def striphtml(self, text):
@@ -243,9 +256,10 @@ class ChatBot:
         self.player = player
         self.on = self.client.username == 'Lucus'
         self.banlist = set()
+        self.status = 'Online'
         self.ponies = ['http://herobrinesarmy.com/smileys/biaAf.gif',
                        'http://i.imgur.com/FTizd6W.gif',
-                       ':pony:']
+                       ':pony:', ':facehoof:']
 
     def post(self, text):
         self.client.post(text)
@@ -270,9 +284,7 @@ class ChatBot:
         elif loc != -1 and user not in self.banlist:
             text = text[loc + 10:].strip()
             if self.poster: tmp = self.poster.run(text)
-            if self.poster and tmp != '':
-                self.post('/meBot: ' + tmp)
-            elif text.lower().startswith('exit'):
+            if text.lower().startswith('exit'):
                 self.on = False
             elif text.lower().startswith('ping'):
                 self.post('/meBot: My ping time to herobrinesarmy.com is ' +
@@ -284,6 +296,15 @@ class ChatBot:
                 else:
                     self.post('/meBot: Current song playing: [youtube]' +
                               status + '[/youtube]')
+            elif text.lower().startswith('play'):
+                if not self.player.play(text[5:]):
+                    self.post('/meBot: Already playing something.')
+            elif text.lower().startswith('mtat'):
+                self.client.mtat()
+            elif text.lower().startswith('status'):
+                self.post('Status: ' + self.status)
+            elif self.poster and tmp != '':
+                self.post('/meBot: ' + tmp)
 
     def localcmd(self, cmd):
         if cmd.startswith('ban '):
@@ -307,6 +328,8 @@ class MusicPlayer:
         self.on = True
 
     def play(self, url):
+        if len(url) < 16:
+            url = 'http://youtube.com/watch?v=' + url
         if self.playproc != None and self.playproc.poll() == None:
             return False
         if url == '' or not self.on:
@@ -353,6 +376,10 @@ rules = [
     ('[i]', '\033[3m'), ('[/i]', '\033[23m'),
     ('[u]', '\033[4m'), ('[/u]', '\033[24m'),
     ('[s]', '\033[9m'), ('[/s]', '\033[29m'),
+    ('[img]', ' \033[38;5;196m'), ('[/img]', '\033[39m '),
+    ('[url]', ' \033[38;5;196m'), ('[/url]', '\033[39m '),
+    ('[youtube]', ' \033[38;5;196m'), ('[/youtube]', '\033[39m '),
+    ('[spoiler]', ''), ('[/spoiler]', '')
     ]
 
 def stylize(text):
@@ -382,7 +409,7 @@ if __name__ == '__main__':
         if text == '': return
         l = len(text)
         buffer = readline.get_line_buffer()
-        print('\r' + text + ' ' * (79 - l) + '\n  > ' + buffer, end='')
+        print('\r\033[K' + text + '\n  > ' + buffer, end='')
         readline.redisplay()
     def printchat(text, user, sendtime, msgid, userid):
         global lastsong
@@ -401,7 +428,7 @@ if __name__ == '__main__':
         printmid(text + '\033[0m')
         if ys != -1:
             lastsong = (otext + ' ')[ys + 9:ye]
-            printmid('Type /play to listen to this song')
+            printmid('Type /play last to listen to this song')
 
     def userhandler(lastusers, users):
         left = lastusers - users
@@ -442,6 +469,8 @@ if __name__ == '__main__':
                 print('That did not work...')
         elif cmd.startswith('/eval '):
             print(str(eval(cmd[6:])))
+        elif cmd.startswith('/mtat'):
+            client.mtat()
         elif cmd.startswith('/music '):
             player.localcmd(cmd[7:])
         elif cmd == '/n':
@@ -451,8 +480,10 @@ if __name__ == '__main__':
         elif cmd.startswith('/play'):
             if cmd[6:].strip().startswith('random'):
                 player.play(poster.run('song')[9:-10])
-            else:
+            elif cmd[6:].strip().startswith('last'):
                 player.play(lastsong)
+            else:
+                player.play(cmd[6:].strip())
         elif cmd.startswith('/robo '):
             client.post(' '.join('-'.join(list(x))
                                  for x in cmd[6:].split(' ')))
@@ -460,6 +491,8 @@ if __name__ == '__main__':
             if not client.setchannel(cmd[6:]):
                 print('WARNING: Could not switch channels because ' +
                          'the post queue is not empty.')
+        elif cmd.startswith('/status'):
+            bot.status = cmd[8:]
         elif cmd.startswith('/stop'):
             player.stop()
         elif cmd.startswith('/user'):
