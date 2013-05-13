@@ -233,7 +233,7 @@ def parse(output, msg, first_time, room, cookie)
     elsif msg[1].start_with?('r: ')
         msg[1] = rot13(msg[1].sub(/\Ar: /, ''))
         msg[0][1] = '000000'
-        parse(output, msg, first_time)
+        parse(output, msg, first_time, room, cookie)
     else
         op = true
     end
