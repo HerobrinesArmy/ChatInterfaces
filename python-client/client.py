@@ -268,6 +268,7 @@ class ChatBot:
         if not self.on: return
         original = text
         loc = text.lower().find('@lucusbot ')
+        playloc = text.lower().find('bot play')
         if any([x in text for x in self.ponies]):
             self.post(':pokeball:')
         elif 'lucus' in text.lower() and loc == -1 and user != 'Lucus':
@@ -281,6 +282,9 @@ class ChatBot:
                 self.post('@' + user + ' ::stare:')
         elif ':allthethings:' in text:
             self.post(':att:*')
+        elif playloc != -1:
+            sl = text[playloc + 9:].find(' ')
+            self.player.play(text[playloc + 9:sl])
         elif loc != -1 and user not in self.banlist:
             text = text[loc + 10:].strip()
             if self.poster: tmp = self.poster.run(text)
@@ -303,6 +307,8 @@ class ChatBot:
                 self.client.mtat()
             elif text.lower().startswith('status'):
                 self.post('Status: ' + self.status)
+            elif text.lower().startswith('beep'):
+                self.player.beep()
             elif self.poster and tmp != '':
                 self.post('/meBot: ' + tmp)
 
@@ -329,7 +335,7 @@ class MusicPlayer:
 
     def play(self, url):
         if len(url) < 16:
-            url = 'http://youtube.com/watch?v=' + url
+            url = 'https://www.youtube.com/watch?v=' + url
         if self.playproc != None and self.playproc.poll() == None:
             return False
         if url == '' or not self.on:
@@ -340,6 +346,16 @@ class MusicPlayer:
                                          stdout=subprocess.DEVNULL,
                                          stderr=subprocess.DEVNULL)
         return True
+
+    def beep(self):
+        proc = subprocess.Popen(['cvlc', 'beep.mp3', '--play-and-exit'],
+                                stdin=subprocess.DEVNULL,
+                                stdout=subprocess.DEVNULL,
+                                stderr=subprocess.DEVNULL)
+        try:
+            proc.wait(1)
+        except:
+            proc.kill()
 
     def stop(self):
         self.playproc.terminate()
