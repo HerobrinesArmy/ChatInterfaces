@@ -1,15 +1,14 @@
 #!/bin/bash -i
-# Version 1.3.9
-trap 'kill ${GETMESSAGES_PID} >/dev/null 2>&1; rm cookie >/dev/null 2>&1; rm LAST_JSON_INPUT >/dev/null 2>&1; kill $(cat VLC_PID) >/dev/null 2>&1; rm VLC_PID >/dev/null 2>&1; exit 0;' INT QUIT
+# Version 1.4.0
+trap 'kill ${GETMESSAGES_PID} >/dev/null 2>&1; rm LAST_JSON_INPUT >/dev/null 2>&1; kill $(cat VLC_PID) >/dev/null 2>&1; rm VLC_PID >/dev/null 2>&1; exit 0;' INT QUIT
 GLOBIGNORE="*"
-VERSION="1.3.9"
+VERSION="1.4.0"
 
 echo -n "" > VLC_PID
 # The postMessage function takes a single argument of the data you would like to post, and urlencodes and posts it
 postMessage ()
 {
     local ENCODED_MESSAGE=$( urlEncode "$1" )
-    auth
     curl $PROXY -m 60 -L -b cookie -c cookie "http://herobrinesarmy.com/post_chat.php?c=${CHAT_ROOM}&o=1&m=${ENCODED_MESSAGE}" >/dev/null 2>&1
 }
 
@@ -259,7 +258,6 @@ while :
                 ;;
             /ex*)
                 kill $GETMESSAGES_PID >/dev/null 2>&1
-                rm cookie >/dev/null 2>&1
                 rm LAST_JSON_INPUT >/dev/null 2>&1
                 kill $(cat VLC_PID) >/dev/null 2>&1
                 rm VLC_PID >/dev/null 2>&1
