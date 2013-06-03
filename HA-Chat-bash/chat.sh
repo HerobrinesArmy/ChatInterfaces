@@ -1,8 +1,8 @@
 #!/bin/bash -i
-# Version 1.4.0
+# Version 1.4.1
 trap 'kill ${GETMESSAGES_PID} >/dev/null 2>&1; rm LAST_JSON_INPUT >/dev/null 2>&1; kill $(cat VLC_PID) >/dev/null 2>&1; rm VLC_PID >/dev/null 2>&1; exit 0;' INT QUIT
 GLOBIGNORE="*"
-VERSION="1.4.0"
+VERSION="1.4.1"
 
 echo -n "" > VLC_PID
 # The postMessage function takes a single argument of the data you would like to post, and urlencodes and posts it
@@ -29,7 +29,7 @@ getMessages ()
                 LMID=$( echo $JSON_INPUT | sed 's/.*"lmid":"\([0-9]*\)",.*/\1/g' )
                 echo "$JSON_INPUT" > LAST_JSON_INPUT
             fi
-            local INCOMING_MESSAGE=$( echo $JSON_INPUT | sed s/'"users":.*'/''/ | sed 's/},/},\n/g' | sed 's/.*"[0-9]*":{"message_id":"[0-9]*","user_id":"[0-9]*","user":"\(<[^>]*>\)*\([^<]*\)<[^>]*>[^"]*","message":"\([^"]*\)".*/\2: \3/g' | sed '$d' | sed 's/&amp;/\&/g' | sed 's/&lt;/</g' | sed 's/&gt;/>/g' | sed 's/&quot;/"/g' | sed "s/\]\[/\] \[/g" | sed 's/\\\//\//g' | sed 's/\[img\]\([^\[]*\)\[\/img\]/\1 /Ig' | sed 's/\[youtube\]\([^\[]*\)\[\/youtube\]/\1 /Ig' | sed -e 's/\([^:]*[^:]\)/\\033\[1;34m\1\\033\[0m/1' | sed -e 's/\([^:]*[^:]\): \/me \?/\*\1 /1' | sed 's/\(.\)/\1\x00/g' )
+            local INCOMING_MESSAGE=$( echo $JSON_INPUT | sed s/'"users":.*'/''/ | sed 's/},/},\n/g' | sed 's/.*"[0-9]*":{"message_id":"[0-9]*","user_id":"[0-9]*","user":"\(<[^>]*>\)*\([^<]*\)<[^>]*>[^"]*","message":"\([^"]*\)".*/\2: \3/g' | sed '$d' | sed 's/&amp;/\&/g' | sed 's/&lt;/</g' | sed 's/&gt;/>/g' | sed 's/&quot;/"/g' | sed "s/\]\[/\] \[/g" | sed 's/\\\//\//g' | sed 's/\[img\]\([^\[]*\)\[\/img\]/\1 /Ig' | sed 's/\[youtube\]\([^\[]*\)\[\/youtube\]/\1 /Ig' | sed -e 's/\([^:]*[^:]\)/\\033\[1;34m\1\\033\[0m/1' | sed -e 's/\([^:]*[^:]\): \/me \?/\*\1 /1' | sed 's/\(.\)/\1\x00/g' | sed 's/`//g' )
             if [ -n "$INCOMING_MESSAGE" ]
                 then
                     if [ "$LMID" != "$LMID_PREVIOUS" ]
