@@ -23,7 +23,8 @@ tmux resize-pane -t 1 -x 13
 auth
 echo "Main chats are  8613406 (main chat) and 3 (science chat)."
 read -e -p "Enter the chat room number you wish to join: " -i "8613406" CHAT_ROOM
-mkdir ${DIR}/session/tmp/${CHAT_ROOM}/
+mkdir -p "${DIR}/session/tmp/"
+mkdir "${DIR}/session/tmp/${CHAT_ROOM}/"
 echo "" > ${DIR}/session/tmp/${CHAT_ROOM}/LAST_JSON_INPUT
 tmux select-pane -t 0
 tmux send-keys "${DIR}/getMessages.sh $CHAT_ROOM" C-m
