@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION="2.0.0"
+VERSION="2.0.1"
 DIR="${BASH_SOURCE}%/*}"
 if [[ ! -d "$DIR" ]]
     then DIR="$PWD"
