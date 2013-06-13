@@ -4,6 +4,7 @@ DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$DIR" ]]
     then DIR="$PWD"
 fi
+VERSION="$2"
 CHAT_ROOM="${1}"
 # Including scripts
 . ${DIR}/lib/postMessage.sh

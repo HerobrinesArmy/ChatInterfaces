@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION="2.0.2"
+VERSION="2.0.3"
 DIR="${BASH_SOURCE}%/*}"
 if [[ ! -d "$DIR" ]]
     then DIR="$PWD"
@@ -31,5 +31,5 @@ tmux send-keys "${DIR}/getMessages.sh $CHAT_ROOM" C-m
 tmux select-pane -t 1
 tmux send-keys "${DIR}/users.sh $CHAT_ROOM" C-m
 tmux select-pane -t 2
-tmux send-keys "${DIR}/input.sh $CHAT_ROOM" C-m
+tmux send-keys "${DIR}/input.sh $CHAT_ROOM $VERSION" C-m
 tmux attach-session -t $SESSION
