@@ -1,4 +1,4 @@
-package org.herobrinesarmy.javaclient.entities;
+package com.herobrinesarmy.javaclient.entities;
 
 /**
  * A class for a message on herobrinesarmy.com, handles any bbcode tags, emoticons, and links within the message.
