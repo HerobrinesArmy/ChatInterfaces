@@ -11,3 +11,11 @@ Phoenix's Java Libs/bin/.DS_Store
 RubyChat/lib/experimental/*
 
 __pycache__
+
+JavaClient/.idea/.name
+
+JavaClient/.idea/compiler.xml
+
+*.xml
+
+JavaClient/JavaClient.iml
