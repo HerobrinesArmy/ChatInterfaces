@@ -1,4 +1,4 @@
-package org.herobrinesarmy.javaclient;
+package org.herobrinesarmy.javaclient.entities;
 
 /**
  * @author Phoenix
