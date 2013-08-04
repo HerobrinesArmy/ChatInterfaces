@@ -6,7 +6,7 @@ postList ()
     MESSAGE="$1"
     LIST="${DIR}/data/lists/${2}.txt"
     MESSAGE_LENGTH=$( echo ${MESSAGE} | wc -w )
-    LIST_LINES=$( cat $LIST | wc -l )
+    LIST_LINES=$( wc -l < $LIST )
 
     if [ $MESSAGE_LENGTH -gt 1 ]
         then
@@ -43,7 +43,7 @@ postList ()
 
     if [ "$LIST_ARG1" = "previous" ]
         then
-            echo "The number of the last picture posted is $( cat ${DIR}/session/tmp/${CHAT_ROOM}/${2}_last )."
+            echo "The number of the last picture posted is $( < ${DIR}/session/tmp/${CHAT_ROOM}/${2}_last )."
     fi
 
     LIST_ARG1=""
