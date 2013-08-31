@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION="2.0.5"
+VERSION="2.0.6"
 DIR="${BASH_SOURCE}%/*}"
 if [[ ! -d "$DIR" ]]
     then DIR="$PWD"
@@ -19,7 +19,7 @@ tmux split-window -h
 # input line
 tmux resize-pane -t 2 -y 2
 # user list
-tmux resize-pane -t 1 -x 15
+tmux resize-pane -t 1 -x 17
 auth
 echo "Main chats are  8613406 (main chat) and 3 (science chat)."
 read -e -p "Enter the chat room number you wish to join: " -i "8613406" CHAT_ROOM
