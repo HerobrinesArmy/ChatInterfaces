@@ -7,6 +7,9 @@ GLOBIGNORE="*"
 CHAT_ROOM="${1}"
 # Including things
 . ${DIR}/lib/urlEncode.sh
+. ${DIR}/lib/postMessage.sh
+. ${DIR}/lib/postList.sh
+. ${DIR}/lib/killChat.sh
 
 LMID="0"
 while :
@@ -23,6 +26,12 @@ while :
                 if [ "$LMID" != "$LMID_PREVIOUS" ]
                     then
                         echo -e "\r\033[K$INCOMING_MESSAGE"
+                        (
+                        GLOBIGNORE=""
+                        for f in ${DIR}/bots/*; do
+                            . $f
+                        done
+                        ) &
                         LMID_PREVIOUS="$LMID"
                 fi
         fi

@@ -1,10 +1,13 @@
 #!/bin/bash
-VERSION="2.0.6"
+VERSION="2.1.0"
+trap 'killChat' INT QUIT
 DIR="${BASH_SOURCE}%/*}"
 if [[ ! -d "$DIR" ]]
     then DIR="$PWD"
 fi
 
+. ${DIR}/lib/killChat.sh
+. ${DIR}/lib/checkDeps.sh
 . ${DIR}/lib/auth.sh
 
 SESSION="${USER}${RANDOM}"
@@ -19,7 +22,7 @@ tmux split-window -h
 # input line
 tmux resize-pane -t 2 -y 2
 # user list
-tmux resize-pane -t 1 -x 17
+tmux resize-pane -t 1 -x 15
 auth
 echo "Main chats are  8613406 (main chat) and 3 (science chat)."
 read -e -p "Enter the chat room number you wish to join: " -i "8613406" CHAT_ROOM
