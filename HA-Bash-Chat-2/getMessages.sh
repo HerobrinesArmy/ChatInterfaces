@@ -11,6 +11,8 @@ CHAT_ROOM="${1}"
 . ${DIR}/lib/postList.sh
 . ${DIR}/lib/killChat.sh
 
+mkdir -p "${DIR}/bots/"
+
 LMID="0"
 while :
     do
