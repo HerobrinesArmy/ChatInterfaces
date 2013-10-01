@@ -24,22 +24,37 @@ while :
                 LMID=$( echo $JSON_INPUT | sed 's/.*"lmid":"\([0-9]*\)",.*/\1/g' )
                 echo "$JSON_INPUT" > ${DIR}/session/tmp/${CHAT_ROOM}/LAST_JSON_INPUT
             fi
-            INCOMING_MESSAGE=$( echo $JSON_INPUT | sed s/'"users":.*'/''/ | sed 's/},/},\n/g' | sed 's/.*"[0-9]*":{"message_id":"[0-9]*","user_id":"[0-9]*","user":"\(<[^>]*>\)*\([^<]*\)<[^>]*>[^"]*","message":"\([^"]*\)".*/\2: \3/g' | sed '$d' | sed 's/&amp;/\&/g' | sed 's/&lt;/</g' | sed 's/&gt;/>/g' | sed 's/&quot;/"/g' | sed "s/\]\[/\] \[/g" | sed 's/\\\//\//g' | sed 's/\[img\]\([^\[]*\)\[\/img\]/\1 /Ig' | sed 's/\[youtube\]\([^\[]*\)\[\/youtube\]/\1 /Ig' | sed -e 's/\([^:]*[^:]\)/\\033\[1;34m\1\\033\[0m/1' | sed -e 's/\([^:]*[^:]\): \/me \?/\*\1 /1' | sed 's/\(.\)/\1\x00/g' | sed 's/`//g' )
-            if [ -n "$INCOMING_MESSAGE" ]
-                then
-                    if [ "$LMID" != "$LMID_PREVIOUS" ]
+
+            preparse=$( echo "$JSON_INPUT" | grep -Po '"[0-9]*":{"message_id":.*?}' | sed 's/&amp;/\&/g' | sed 's/&lt;/</g' | sed 's/&gt;/>/g' | sed 's/&quot;/"/g' | sed "s/\]\[/\] \[/g" | sed 's/\\\//\//g' | sed 's/\[img\]\([^\[]*\)\[\/img\]/\1 /Ig' | sed 's/\[youtube\]\([^\[]*\)\[\/youtube\]/\1 /Ig' )
+            readarray array1 <<< "$preparse"
+            i=0
+            while [ $i -lt ${#array1[@]} ]
+                do
+                    USERNAME=$( echo "${array1[${i}]}" | sed 's/.*"user":"\(<[^>]*>\)*\([^<]*\)<[^>]*>[^"]*".*/\2/g' )
+                    INCOMING_MESSAGE=$( echo "${array1[${i}]}" | sed 's/.*"message":"\(.*\)",.*/\1/g' )
+                    if [ -n "$INCOMING_MESSAGE" ]
                         then
-                            echo -e "\r\033[K$INCOMING_MESSAGE"
                             (
-                            GLOBIGNORE=""
-                            for f in ${DIR}/bots/*; do
-                                . $f
-                            done
+                            if [ "$FIRSTRUN" == "false" ]
+                                then
+                                    GLOBIGNORE=""
+                                    for f in ${DIR}/bots/*; do
+                                        . $f
+                                    done
+                            fi
                             ) &
-                            LMID_PREVIOUS="$LMID"
+                            if [[ "$INCOMING_MESSAGE" == /me* ]]
+                                then
+                                    USERNAME_CHANGED=$( echo -e "\033[1;34m${USERNAME}\033[0m" )
+                                    OUTPUT=$( echo "$INCOMING_MESSAGE" | sed -e "s/\/me/\*${USERNAME_CHANGED}/1" )
+                                    echo "$OUTPUT"
+                                else
+                                    OUTPUT=$( echo -en "\033[1;34m${USERNAME}\033[0m: "; echo "${INCOMING_MESSAGE}" )
+                                    echo "$OUTPUT"
+                            fi
+                            ((i++))
                     fi
-            fi
-            else
-                sleep 15
+                done
         fi
+        FIRSTRUN="false"
     done
