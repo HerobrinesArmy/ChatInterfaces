@@ -33,6 +33,7 @@ while :
                 do  
                     USERNAME=$( echo "${array1[${i}]}" | sed 's/.*"user":"\(<[^>]*>\)*\([^<]*\)<[^>]*>[^"]*".*/\2/g' )
                     INCOMING_MESSAGE=$( echo "${array1[${i}]}" | sed 's/.*"message":"\(.*\)",.*/\1/g' )
+                    MESSAGE_TIME=$( echo "${array1[${i}]}" | sed 's/.*"time":"\(.*\)".*/\1/g' )
                     if [ -n "$INCOMING_MESSAGE" ]
                         then
                             (
@@ -50,7 +51,7 @@ while :
                                     OUTPUT=$( echo "$INCOMING_MESSAGE" | sed -e "s/\/me/\*${USERNAME_CHANGED}/1" )
                                     echo "$OUTPUT"
                                 else
-                                    OUTPUT=$( echo -en "\033[1;34m${USERNAME}\033[0m: "; echo "${INCOMING_MESSAGE}" )
+                                    OUTPUT=$( echo -en "\033[0;32m[${MESSAGE_TIME}]\033[0m"; echo -en "\033[1;34m${USERNAME}\033[0m: "; echo "${INCOMING_MESSAGE}" )
                                     echo "$OUTPUT"
                             fi
                             ((i++))
