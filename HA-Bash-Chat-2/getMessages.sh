@@ -23,7 +23,7 @@ while :
                 then
                 LMID=$( echo $JSON_INPUT | sed 's/.*"lmid":"\([0-9]*\)",.*/\1/g' )
                 echo "$JSON_INPUT" > ${DIR}/session/tmp/${CHAT_ROOM}/LAST_JSON_INPUT
-            	preparse=$( echo "$JSON_INPUT" | grep -Po '"[0-9]*":{"message_id":.*?}' | sed 's/&amp;/\&/g' | sed 's/&lt;/</g' | sed 's/&gt;/>/g' | sed 's/&quot;/"/g' | sed "s/\]\[/\] \[/g" | sed 's/\\\//\//g' | sed 's/\[img\]\([^\[]*\)\[\/img\]/\1 /Ig' | sed 's/\[youtube\]\([^\[]*\)\[\/youtube\]/\1 /Ig' )
+            	preparse=$( echo "$JSON_INPUT" | grep -Po '"[0-9]*":{"message_id":.*?},' | sed 's/&amp;/\&/g' | sed 's/&lt;/</g' | sed 's/&gt;/>/g' | sed 's/&quot;/"/g' | sed "s/\]\[/\] \[/g" | sed 's/\\\//\//g' | sed 's/\[img\]\([^\[]*\)\[\/img\]/\1 /Ig' | sed 's/\[youtube\]\([^\[]*\)\[\/youtube\]/\1 /Ig' )
             	readarray array1 <<< "$preparse"
             fi
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION="2.2.2"
+VERSION="2.2.3"
 trap 'killChat' INT QUIT
 DIR="${BASH_SOURCE}%/*}"
 if [[ ! -d "$DIR" ]]
