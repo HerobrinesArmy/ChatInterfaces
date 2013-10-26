@@ -34,7 +34,8 @@ while :
                     USERNAME=$( echo "${array1[${i}]}" | sed 's/.*"user":"\(<[^>]*>\)*\([^<]*\)<[^>]*>[^"]*".*/\2/g' )
                     INCOMING_MESSAGE=$( echo "${array1[${i}]}" | sed 's/.*"message":"\(.*\)",.*/\1/g' )
                     MESSAGE_TIME=$( echo "${array1[${i}]}" | sed 's/.*"time":"\(.*\)".*/\1/g' )
-                    if [ -n "$INCOMING_MESSAGE" ]
+                    MESSAGE_ID=$( echo "${array1[${i}]}" | sed 's/"\([0-9]*\)".*/\1/g' )
+                    if [ -n "$INCOMING_MESSAGE" ] && [ "$LMID" -ge "$MESSAGE_ID" ]
                         then
                             (
                             if [ "$FIRSTRUN" == "false" ]
