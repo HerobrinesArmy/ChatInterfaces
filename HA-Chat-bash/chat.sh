@@ -2,7 +2,7 @@
 # Version 1.4.1
 trap 'kill ${GETMESSAGES_PID} >/dev/null 2>&1; rm LAST_JSON_INPUT >/dev/null 2>&1; kill $(cat VLC_PID) >/dev/null 2>&1; rm VLC_PID >/dev/null 2>&1; exit 0;' INT QUIT
 GLOBIGNORE="*"
-VERSION="1.4.1"
+VERSION="1.5.0"
 
 echo -n "" > VLC_PID
 # The postMessage function takes a single argument of the data you would like to post, and urlencodes and posts it
