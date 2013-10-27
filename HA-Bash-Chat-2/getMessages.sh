@@ -35,7 +35,7 @@ while :
                     INCOMING_MESSAGE=$( echo "${array1[${i}]}" | sed 's/.*"message":"\(.*\)",.*/\1/g' )
                     MESSAGE_TIME=$( echo "${array1[${i}]}" | sed 's/.*"time":"\(.*\)".*/\1/g' )
                     MESSAGE_ID=$( echo "${array1[${i}]}" | sed 's/"\([0-9]*\)".*/\1/g' )
-                    if [ -n "$INCOMING_MESSAGE" ] && [ "$LMID" -ge "$MESSAGE_ID" ]
+                    if [ -n "$INCOMING_MESSAGE" ]
                         then
                             (
                             if [ "$FIRSTRUN" == "false" ]
