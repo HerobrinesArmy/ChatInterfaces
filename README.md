@@ -1,7 +1,9 @@
-JavaClient (Phoenix and LukeW4lker)
+JavaClient (Phoenix)
 ===================================
 
-Since it was written poorly, I have decided to rewrite the Java client. I have enlisted the help of Luke, as I believe he can learn a lot from aiding development of this project. We will begin, like last time, with a CLI version, then developing a GUI version later.
+So, for a third time, I am restarting this project. However, I am doing it alone.
+
+Watch this space.
 
 RubyChat (awesome271828)
 =====================
