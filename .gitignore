@@ -4,3 +4,5 @@ RubyChat/lib/experimental/*
 __pycache__
 
 *.xml
+
+*.iml
