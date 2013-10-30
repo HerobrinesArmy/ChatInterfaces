@@ -1,21 +1,6 @@
-
-Phoenix's Java Libs/.DS_Store
-Phoenix's Java Libs/src/.DS_Store
-Phoenixs Java Libs/.DS_Store
-
-Phoenixs Java Libs/src/.DS_Store
-
-Phoenix's Java Libs/bin/.DS_Store
-
 .DS_Store
 RubyChat/lib/experimental/*
 
 __pycache__
 
-JavaClient/.idea/.name
-
-JavaClient/.idea/compiler.xml
-
 *.xml
-
-JavaClient/JavaClient.iml
