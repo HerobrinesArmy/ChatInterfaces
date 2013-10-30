@@ -6,7 +6,7 @@ then
     if [ $MESSAGE_LENGTH -gt 1 ]
         then
         MUTE_ARG1=$( echo $MESSAGE | cut -d' ' -f2- )
-        MUTE_ID=$( cat ${DIR}/session/tmp/${CHAT_ROOM}/LAST_JSON_INPUT | sed "s/.*\"user_id\":\"\([0-9]*\)\",\"user\":\".*${MUTE_ARG1}.*\".*/\1/gI" )
+        MUTE_ID=$( sed "s/.*\"user_id\":\"\([0-9]*\)\",\"user\":\".*${MUTE_ARG1}.*\".*/\1/gI" < ${DIR}/session/tmp/${CHAT_ROOM}/LAST_JSON_INPUT )
         curl $PROXY -s -b ${DIR}/session/cookie -c ${DIR}/session/cookie "http://herobrinesarmy.com/mute.php?o=1&m=${MUTE_ID}" >/dev/null 2>&1 &
         else
         echo "Enter your target next time."

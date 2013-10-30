@@ -1,10 +1,13 @@
 #!/bin/bash
-VERSION="2.0.3"
+VERSION="2.3.2"
+trap 'killChat' INT QUIT
 DIR="${BASH_SOURCE}%/*}"
 if [[ ! -d "$DIR" ]]
     then DIR="$PWD"
 fi
 
+. ${DIR}/lib/killChat.sh
+. ${DIR}/lib/checkDeps.sh
 . ${DIR}/lib/auth.sh
 
 SESSION="${USER}${RANDOM}"

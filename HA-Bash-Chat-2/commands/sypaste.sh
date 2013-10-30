@@ -21,7 +21,7 @@ if [ $MESSAGE_LENGTH -gt 1 ]
 # Getting the file name
 FILE="$PASTE_ARG"
 # Setting the file text
-TEXT=$( urlEncode "$( cat "$FILE" )" )
+TEXT=$( urlEncode "$( < "$FILE" )" )
 # Setting the post title
 TITLE="-d title=${PASTE_ARG}"
 # Setting the username to the currently logged in account

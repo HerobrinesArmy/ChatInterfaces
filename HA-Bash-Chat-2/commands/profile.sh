@@ -6,7 +6,7 @@ then
     if [ $MESSAGE_LENGTH -gt 1 ]
         then
         PROFILE_ARG1=$( echo $MESSAGE | cut -d' ' -f2- )
-        PROFILE=$( cat ${DIR}/session/tmp/${CHAT_ROOM}/LAST_JSON_INPUT | sed "s/.*\"user_id\":\"\([0-9]*\)\",\"user\":\".*${PROFILE_ARG1}.*\".*/\1/gI")
+        PROFILE=$( sed "s/.*\"user_id\":\"\([0-9]*\)\",\"user\":\".*${PROFILE_ARG1}.*\".*/\1/gI" < ${DIR}/session/tmp/${CHAT_ROOM}/LAST_JSON_INPUT )
         echo "http://herobrinesarmy.enjin.com/profile/${PROFILE}"
         else
         echo "You must enter a name."

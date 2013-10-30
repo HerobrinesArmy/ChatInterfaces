@@ -2,7 +2,7 @@
 # Version 1.4.1
 trap 'kill ${GETMESSAGES_PID} >/dev/null 2>&1; rm LAST_JSON_INPUT >/dev/null 2>&1; kill $(cat VLC_PID) >/dev/null 2>&1; rm VLC_PID >/dev/null 2>&1; exit 0;' INT QUIT
 GLOBIGNORE="*"
-VERSION="1.4.1"
+VERSION="1.5.0"
 
 echo -n "" > VLC_PID
 # The postMessage function takes a single argument of the data you would like to post, and urlencodes and posts it
@@ -18,7 +18,7 @@ getMessages ()
     LMID="0"
     while :
         do
-            local JSON_INPUT=$( curl $PROXY -m 60 -s -L -b cookie -c cookie "http://herobrinesarmy.com/update_chat2.php?c=${1}&l=${LMID}&p=0" )
+            local JSON_INPUT=$( curl $PROXY -m 60 -s -L -b cookie -c cookie "http://herobrinesarmy.com/update_chat2.php?c=${1}&l=${LMID}&p=0" 2>/dev/null )
             if [ -n "$DUMP_JSON" ]
                 then
                 echo "$JSON_INPUT" > $DUMP_JSON
@@ -28,26 +28,34 @@ getMessages ()
                 then
                 LMID=$( echo $JSON_INPUT | sed 's/.*"lmid":"\([0-9]*\)",.*/\1/g' )
                 echo "$JSON_INPUT" > LAST_JSON_INPUT
+                preparse=$( echo "$JSON_INPUT" | grep -Po '"[0-9]*":{"message_id":.*?},' | sed 's/&amp;/\&/g' | sed 's/&lt;/</g' | sed 's/&gt;/>/g' | sed 's/&quot;/"/g' | sed "s/\]\[/\] \[/g" | sed 's/\\\//\//g' | sed 's/\[img\]\([^\[]*\)\[\/img\]/\1 /Ig' | sed 's/\[youtube\]\([^\[]*\)\[\/youtube\]/\1 /Ig' )
+                readarray array1 <<< "$preparse"
             fi
-            local INCOMING_MESSAGE=$( echo $JSON_INPUT | sed s/'"users":.*'/''/ | sed 's/},/},\n/g' | sed 's/.*"[0-9]*":{"message_id":"[0-9]*","user_id":"[0-9]*","user":"\(<[^>]*>\)*\([^<]*\)<[^>]*>[^"]*","message":"\([^"]*\)".*/\2: \3/g' | sed '$d' | sed 's/&amp;/\&/g' | sed 's/&lt;/</g' | sed 's/&gt;/>/g' | sed 's/&quot;/"/g' | sed "s/\]\[/\] \[/g" | sed 's/\\\//\//g' | sed 's/\[img\]\([^\[]*\)\[\/img\]/\1 /Ig' | sed 's/\[youtube\]\([^\[]*\)\[\/youtube\]/\1 /Ig' | sed -e 's/\([^:]*[^:]\)/\\033\[1;34m\1\\033\[0m/1' | sed -e 's/\([^:]*[^:]\): \/me \?/\*\1 /1' | sed 's/\(.\)/\1\x00/g' | sed 's/`//g' )
-            if [ -n "$INCOMING_MESSAGE" ]
-                then
-                    if [ "$LMID" != "$LMID_PREVIOUS" ]
+
+            i=0
+            while [ $i -lt ${#array1[@]} ]
+                do
+                    USERNAME=$( echo "${array1[${i}]}" | sed 's/.*"user":"\(<[^>]*>\)*\([^<]*\)<[^>]*>[^"]*".*/\2/g' )
+                    INCOMING_MESSAGE=$( echo "${array1[${i}]}" | sed 's/.*"message":"\(.*\)",.*/\1/g' )
+                    MESSAGE_TIME=$( echo "${array1[${i}]}" | sed 's/.*"time":"\(.*\)".*/\1/g' )
+                    if [ -n "$INCOMING_MESSAGE" ]
                         then
-                            echo -e "\r\033[K$INCOMING_MESSAGE"
-                            LMID_PREVIOUS="$LMID"
-                                if [ -n "$LOGFILE" ]
-                                    then
-                                        echo -e "$INCOMING_MESSAGE" >> $LOGFILE
-                                fi
+                            if [[ "$INCOMING_MESSAGE" == /me* ]]
+                                then
+                                    USERNAME_CHANGED=$( echo -e "\033[1;34m${USERNAME}\033[0m" )
+                                    OUTPUT=$( echo "$INCOMING_MESSAGE" | sed -e "s/\/me/\*${USERNAME_CHANGED}/1" )
+                                    echo -en "\033[0;32m[${MESSAGE_TIME}]\033[0m"; echo "$OUTPUT"
+                                else
+                                    OUTPUT=$( echo -en "\033[0;32m[${MESSAGE_TIME}]\033[0m"; echo -en "\033[1;34m${USERNAME}\033[0m: "; echo "${INCOMING_MESSAGE}" )
+                                    echo "$OUTPUT"
+                            fi
+                            ((i++))
+                            if [ -n "$LOGFILE" ]
+                                then
+                                    echo -e "$INCOMING_MESSAGE" >> $LOGFILE
+                            fi
                     fi
-            fi
-            case $INCOMING_MESSAGE in
-                *:\ Dark\ Knight\ theme)
-                    vlc --sout '#display{novideo=true}' --play-and-exit -I dummy http://www.youtube.com/watch?v=Z_DSq-LhOyU >/dev/null 2>&1 &
-                    echo -n "$! " >> VLC_PID
-                    ;;
-            esac
+                done
         done
 }
 
@@ -242,10 +250,6 @@ while :
                     else
                         echo "You realize that you have to enter a command, right?"
                 fi
-                ;;
-            /killmusic)
-                kill $(cat VLC_PID) 2>&1
-                rm VLC_PID >/dev/null 2>&1
                 ;;
             /no)
                 postMessage "[img]http://i.imgur.com/AkGfK4Z.jpg[/img]" &
